@@ -1,6 +1,9 @@
 extends SceneTree
-## Jump planning against trap chains on level 1 (basic runner):
+## Jump planning against trap chains on level 1 (basic runner) and level 6 (double jump):
 ## godot --headless --fixed-fps 60 -s res://tests/chain_test.gd
+
+const BASIC_LEVEL := 0
+const JUMPER_LEVEL := 5
 
 var _level: Node
 var _runner: Runner
@@ -9,24 +12,35 @@ var _failures := 0
 
 func _initialize() -> void:
 	# Autoloads aren't visible by name to -s scripts at compile time.
-	var game_state := root.get_node("GameState")
-	game_state.persist = false
-	game_state.current_level_index = 0
-	_level = load("res://scenes/level.tscn").instantiate()
-	root.add_child(_level)
-	_runner = _level.get_node("Runner")
+	root.get_node("GameState").persist = false
 	_run()
 
 
 func _run() -> void:
+	await _start_level(BASIC_LEVEL)
+	await _test_chain_seen_early()
+	await _test_landing_trap_mid_air(true)
+	await _test_wall_then_pit()
+
+	await _start_level(JUMPER_LEVEL)
+	_check(_runner.profile.max_jumps == 2, "level 6 runner double jumps")
+	await _test_chain_seen_early()
+	await _test_landing_trap_mid_air(false)
+	print("DONE: %d failure(s)" % _failures)
+	quit()
+
+
+func _start_level(index: int) -> void:
+	if _level != null:
+		_level.queue_free()
+		await process_frame
+	root.get_node("GameState").current_level_index = index
+	_level = load("res://scenes/level.tscn").instantiate()
+	root.add_child(_level)
+	_runner = _level.get_node("Runner")
 	await _wait(1)
 	_make_ai_deterministic()
 	await _wait(30)
-	await _test_chain_seen_early()
-	await _test_landing_trap_mid_air()
-	await _test_wall_then_pit()
-	print("DONE: %d failure(s)" % _failures)
-	quit()
 
 
 ## Second pit sits exactly where the ideal jump over the first one lands.
@@ -41,8 +55,9 @@ func _test_chain_seen_early() -> void:
 	await _recover()
 
 
-## Landing trap dropped after takeoff: a single-jump runner can't react in the air.
-func _test_landing_trap_mid_air() -> void:
+## Landing trap dropped after takeoff: a single-jump runner can't react in the air,
+## a double-jump runner jumps again once it has reacted.
+func _test_landing_trap_mid_air(should_hit: bool) -> void:
 	var lives_before := _runner.lives
 	_check(_place("Pit", 450.0), "place pit")
 	for i in 240:
@@ -52,7 +67,8 @@ func _test_landing_trap_mid_air() -> void:
 	_check(not _runner.is_on_floor(), "runner took off")
 	_check(_place("Pit", _air_distance() - 20.0), "place pit under landing mid-air")
 	await _wait_until_traps_behind()
-	_check(_runner.lives == lives_before - 1, "mid-air landing trap hits (lives %d -> %d)" % [lives_before, _runner.lives])
+	var label := "mid-air landing trap hits" if should_hit else "air jump dodges mid-air landing trap"
+	_check((_runner.lives < lives_before) == should_hit, "%s (lives %d -> %d)" % [label, lives_before, _runner.lives])
 	await _recover()
 
 

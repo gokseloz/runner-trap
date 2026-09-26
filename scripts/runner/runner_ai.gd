@@ -20,6 +20,8 @@ var seen_counts: Dictionary = {}
 ## trap -> {ready_at: float, action_distance: float, ignored: bool, done: bool}
 var _plans: Dictionary = {}
 var _time := 0.0
+## Ground height at the last takeoff, where jump simulations land.
+var _floor_y := 0.0
 
 @onready var _runner: Runner = get_parent()
 
@@ -28,6 +30,8 @@ func _physics_process(delta: float) -> void:
 	if not enabled or _runner.profile == null or _runner.is_down:
 		return
 	_time += delta
+	if _runner.is_on_floor():
+		_floor_y = _runner.global_position.y
 	_spot_new_traps()
 	_follow_plans()
 
@@ -76,8 +80,9 @@ func _follow_plans() -> void:
 		if _time < plan.ready_at:
 			thinking = true
 			continue
-		if trap.counter_action == "jump" and _runner.is_on_floor():
-			if next_jump == null or trap.global_position.x < next_jump.global_position.x:
+		# Jumps are planned from the ground; mid-air jumps are handled by _should_air_jump().
+		if trap.counter_action == "jump":
+			if _runner.is_on_floor() and (next_jump == null or trap.global_position.x < next_jump.global_position.x):
 				next_jump = trap
 			continue
 		if trap.global_position.x - _runner.global_position.x > plan.action_distance:
@@ -85,7 +90,19 @@ func _follow_plans() -> void:
 		plan.done = _perform(trap.counter_action)
 	if next_jump != null and _should_jump_now(next_jump):
 		_plans[next_jump].done = _runner.jump()
+	elif _should_air_jump():
+		_runner.jump()
 	_runner.set_alert(thinking)
+
+
+## Multi-jump runners jump again mid-air when the current fall ends on a known trap.
+func _should_air_jump() -> bool:
+	if _runner.is_on_floor() or _runner.get_air_jumps_left() <= 0 or not _runner.can_act():
+		return false
+	var here := _runner.global_position
+	if _is_clean_path(here, _runner.velocity.y):
+		return false
+	return _is_clean_path(here, _runner.profile.jump_velocity)
 
 
 ## Picks the takeoff point closest to the ideal one whose arc avoids every trap the runner
@@ -109,20 +126,27 @@ func _should_jump_now(target: Trap) -> bool:
 	return best_offset < TAKEOFF_STEP
 
 
-## Simulates a jump taken `offset` px ahead of the runner, plus a short run after landing.
+## Simulates a jump taken from the ground `offset` px ahead of the runner.
 func _is_clean_jump(offset: float) -> bool:
+	return _is_clean_path(_runner.global_position + Vector2(offset, 0.0), _runner.profile.jump_velocity)
+
+
+## Simulates flight from `start` with vertical speed `velocity_y` down to the ground, plus a
+## short run after landing, against every trap the runner has reacted to.
+func _is_clean_path(start: Vector2, velocity_y: float) -> bool:
 	var hazards: Array[Rect2] = []
 	for trap: Trap in _plans:
 		var plan: Dictionary = _plans[trap]
 		if is_instance_valid(trap) and not trap.consumed and not plan.ignored and _time >= plan.ready_at:
 			hazards.append(trap.get_hit_rect().grow(HAZARD_MARGIN))
 	var speed := _runner.profile.run_speed * _runner.speed_multiplier
-	var start := _runner.global_position + Vector2(offset, 0.0)
-	var air_time := 2.0 * absf(_runner.profile.jump_velocity) / _runner.gravity
+	var g := _runner.gravity
+	var drop := maxf(_floor_y - start.y, 0.0)
+	var air_time := (-velocity_y + sqrt(velocity_y * velocity_y + 2.0 * g * drop)) / g
 	var t := 0.0
 	while t <= air_time + POST_LANDING_TIME:
 		var air_t := minf(t, air_time)
-		var feet := start + Vector2(speed * t, _runner.profile.jump_velocity * air_t + 0.5 * _runner.gravity * air_t * air_t)
+		var feet := start + Vector2(speed * t, velocity_y * air_t + 0.5 * g * air_t * air_t)
 		var body := Rect2(feet.x - Runner.SIZE.x / 2.0, feet.y - Runner.SIZE.y, Runner.SIZE.x, Runner.SIZE.y)
 		for hazard in hazards:
 			if body.intersects(hazard):

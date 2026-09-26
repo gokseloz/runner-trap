@@ -45,6 +45,7 @@ var _ghost: ColorRect
 @onready var _end_panel: Control = $HUD/EndPanel
 @onready var _end_title: Label = $HUD/EndPanel/Box/Title
 @onready var _end_stars: StarRow = $HUD/EndPanel/Box/Stars
+@onready var _levels_button: Button = $HUD/EndPanel/Box/Buttons/Levels
 @onready var _retry_button: Button = $HUD/EndPanel/Box/Buttons/Retry
 @onready var _next_button: Button = $HUD/EndPanel/Box/Buttons/Next
 
@@ -53,6 +54,7 @@ func _ready() -> void:
 	if level_data == null:
 		level_data = GameState.get_current_level()
 	_end_panel.hide()
+	_levels_button.pressed.connect(GameState.open_level_select)
 	_retry_button.pressed.connect(get_tree().reload_current_scene)
 	_next_button.pressed.connect(_go_to_next_level)
 
@@ -96,6 +98,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	match event.physical_keycode:
+		KEY_ESCAPE:
+			GameState.open_level_select()
 		KEY_A:
 			_runner.ai.enabled = not _runner.ai.enabled
 			_runner.set_alert(false)

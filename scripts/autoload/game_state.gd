@@ -6,7 +6,16 @@ const LEVELS: Array[String] = [
 	"res://resources/levels/level_01.tres",
 	"res://resources/levels/level_02.tres",
 	"res://resources/levels/level_03.tres",
+	"res://resources/levels/level_04.tres",
+	"res://resources/levels/level_05.tres",
+	"res://resources/levels/level_06.tres",
+	"res://resources/levels/level_07.tres",
+	"res://resources/levels/level_08.tres",
+	"res://resources/levels/level_09.tres",
+	"res://resources/levels/level_10.tres",
 ]
+const LEVEL_SELECT_SCENE := "res://scenes/level_select.tscn"
+const LEVEL_SCENE := "res://scenes/level.tscn"
 
 var current_level_index := 0
 ## level_id -> best star count (0-3)
@@ -21,7 +30,25 @@ func _ready() -> void:
 
 
 func get_current_level() -> LevelData:
-	return load(LEVELS[current_level_index])
+	return get_level(current_level_index)
+
+
+func get_level(index: int) -> LevelData:
+	return load(LEVELS[index])
+
+
+## A level opens once the one before it has at least one star.
+func is_level_unlocked(index: int) -> bool:
+	return index == 0 or get_level_stars(get_level(index - 1).level_id) > 0
+
+
+func play_level(index: int) -> void:
+	current_level_index = index
+	get_tree().change_scene_to_file(LEVEL_SCENE)
+
+
+func open_level_select() -> void:
+	get_tree().change_scene_to_file(LEVEL_SELECT_SCENE)
 
 
 func has_next_level() -> bool:

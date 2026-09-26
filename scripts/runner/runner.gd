@@ -73,6 +73,10 @@ func is_sliding() -> bool:
 	return _slide_time_left > 0.0
 
 
+func get_air_jumps_left() -> int:
+	return _air_jumps_left
+
+
 ## Action methods return false when the action isn't possible right now.
 func jump() -> bool:
 	if not can_act():

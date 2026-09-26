@@ -44,8 +44,9 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 
 ### Faz 2 — Oyun içeriği (2.–3. hafta)
 - [ ] Runner öğrenme sistemi, kombolar
-- [ ] 10 level, level seçme ekranı, yıldızlar
-- [ ] Kayıt sistemi
+- [x] Akıllı zıplama planı (bilinen tuzak zincirini hesaba katar; iniş tuzağı ancak geç konursa işe yarar)
+- [x] 10 level, level seçme ekranı, yıldızlar (4 runner tipi: basic, fast, çift zıplayan jumper, pro)
+- [x] Kayıt sistemi (yıldızlar + level kilidi)
 - [ ] TR/EN çeviri
 
 ### Faz 3 — Android
