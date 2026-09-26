@@ -166,7 +166,7 @@ func _end_game(player_won: bool) -> void:
 		var remaining := clampf(1.0 - _runner.position.x / level_data.track_length, 0.0, 1.0)
 		stars = level_data.get_stars(remaining)
 		GameState.set_level_stars(level_data.level_id, stars)
-	_end_title.text = "Runner down!" if player_won else "Runner escaped!"
+	_end_title.text = tr("Runner down!") if player_won else tr("Runner escaped!")
 	_end_stars.filled = stars
 	_next_button.visible = player_won and GameState.has_next_level()
 	_end_panel.show()
@@ -183,7 +183,7 @@ func _update_camera() -> void:
 
 
 func _update_lives_label() -> void:
-	_lives_label.text = "%s  ·  Lives: %d" % [level_data.display_name, _runner.lives]
+	_lives_label.text = "%s  ·  %s" % [tr(level_data.display_name), tr("Lives: %d") % _runner.lives]
 
 
 func _update_energy_ui() -> void:

@@ -35,3 +35,18 @@ layout_mode = 2
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 columns = 5
+
+[node name="LanguageButton" type="Button" parent="."]
+auto_translate_mode = 2
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -184.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 76.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Türkçe"

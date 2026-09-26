@@ -8,6 +8,7 @@ const LOCKED_ALPHA := 0.4
 var buttons: Array[Button] = []
 
 @onready var _grid: GridContainer = $Center/Box/Grid
+@onready var _language_button: Button = $LanguageButton
 
 
 func _ready() -> void:
@@ -15,6 +16,15 @@ func _ready() -> void:
 		var button := _make_button(i)
 		_grid.add_child(button)
 		buttons.append(button)
+	# The button names the language it switches to, in that language.
+	var other := GameState.get_next_language()
+	_language_button.text = GameState.LANGUAGES[other]
+	_language_button.pressed.connect(_on_language_pressed.bind(other))
+
+
+func _on_language_pressed(language: String) -> void:
+	GameState.set_language(language)
+	get_tree().reload_current_scene()
 
 
 func _make_button(index: int) -> Button:
@@ -42,7 +52,7 @@ func _make_button(index: int) -> Button:
 	box.add_child(number)
 
 	var runner_name := Label.new()
-	runner_name.text = level.runner.display_name if unlocked else "Locked"
+	runner_name.text = tr(level.runner.display_name) if unlocked else tr("Locked")
 	runner_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	runner_name.add_theme_font_size_override("font_size", 16)
 	box.add_child(runner_name)

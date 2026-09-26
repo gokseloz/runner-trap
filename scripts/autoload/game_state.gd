@@ -16,17 +16,23 @@ const LEVELS: Array[String] = [
 ]
 const LEVEL_SELECT_SCENE := "res://scenes/level_select.tscn"
 const LEVEL_SCENE := "res://scenes/level.tscn"
+## Supported locales -> name shown on the language button (in that language).
+const LANGUAGES := {"en": "English", "tr": "Türkçe"}
+const FALLBACK_LANGUAGE := "en"
 
 var current_level_index := 0
 ## level_id -> best star count (0-3)
 var level_stars: Dictionary = {}
 var ads_removed := false
+## Chosen locale, empty until the player picks one (then the system language is used).
+var language := ""
 ## Tests turn this off so they don't touch the real save file.
 var persist := true
 
 
 func _ready() -> void:
 	load_game()
+	TranslationServer.set_locale(language if not language.is_empty() else _system_language())
 
 
 func get_current_level() -> LevelData:
@@ -51,6 +57,27 @@ func open_level_select() -> void:
 	get_tree().change_scene_to_file(LEVEL_SELECT_SCENE)
 
 
+func get_language() -> String:
+	return TranslationServer.get_locale()
+
+
+func get_next_language() -> String:
+	var codes: Array = LANGUAGES.keys()
+	return codes[(codes.find(get_language()) + 1) % codes.size()]
+
+
+func set_language(code: String) -> void:
+	language = code
+	TranslationServer.set_locale(code)
+	save_game()
+
+
+## OS locale reduced to a supported language code, e.g. "tr_TR" -> "tr".
+func _system_language() -> String:
+	var code := OS.get_locale_language()
+	return code if LANGUAGES.has(code) else FALLBACK_LANGUAGE
+
+
 func has_next_level() -> bool:
 	return current_level_index + 1 < LEVELS.size()
 
@@ -72,6 +99,7 @@ func save_game() -> void:
 	for level_id in level_stars:
 		cfg.set_value("stars", level_id, level_stars[level_id])
 	cfg.set_value("shop", "ads_removed", ads_removed)
+	cfg.set_value("settings", "language", language)
 	cfg.save(SAVE_PATH)
 
 
@@ -83,3 +111,4 @@ func load_game() -> void:
 		for level_id in cfg.get_section_keys("stars"):
 			level_stars[level_id] = cfg.get_value("stars", level_id, 0)
 	ads_removed = cfg.get_value("shop", "ads_removed", false)
+	language = cfg.get_value("settings", "language", "")

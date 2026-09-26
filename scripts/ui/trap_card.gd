@@ -35,8 +35,8 @@ func setup(scene: PackedScene) -> void:
 	swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(swatch)
 
-	box.add_child(_make_label(trap_info.display_name, 18))
-	box.add_child(_make_label("Cost %d" % trap_info.energy_cost, 16))
+	box.add_child(_make_label(tr(trap_info.display_name), 18))
+	box.add_child(_make_label(tr("Cost %d") % trap_info.energy_cost, 16))
 
 
 func _notification(what: int) -> void:

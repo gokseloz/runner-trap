@@ -47,7 +47,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Akıllı zıplama planı (bilinen tuzak zincirini hesaba katar; iniş tuzağı ancak geç konursa işe yarar)
 - [x] 10 level, level seçme ekranı, yıldızlar (4 runner tipi: basic, fast, çift zıplayan jumper, pro)
 - [x] Kayıt sistemi (yıldızlar + level kilidi)
-- [ ] TR/EN çeviri
+- [x] TR/EN çeviri (CSV, sistem dili + level seçme ekranında dil butonu)
 
 ### Faz 3 — Android
 - [ ] JDK 17, Android SDK, Godot export templates
