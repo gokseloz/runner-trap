@@ -1,0 +1,129 @@
+class_name Runner
+extends CharacterBody2D
+## Auto-running character. The AI (later) decides when to call jump(), slide() or stop().
+
+signal hit(lives_left: int)
+signal knocked_out
+
+const SIZE := Vector2(40, 64)
+const SLIDE_HEIGHT := 32.0
+const SLIDE_DURATION := 0.6
+const STOP_DURATION := 0.8
+const STUN_DURATION := 1.0
+const INVULNERABLE_DURATION := 1.5
+
+var profile: RunnerProfile
+var lives := 0
+var is_down := false
+
+var _gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+var _air_jumps_left := 0
+var _slide_time_left := 0.0
+var _stop_time_left := 0.0
+var _stun_time_left := 0.0
+var _invulnerable_time_left := 0.0
+
+@onready var _collision: CollisionShape2D = $CollisionShape2D
+@onready var _body: ColorRect = $Body
+
+
+func _ready() -> void:
+	# Each runner resizes its own shape when sliding.
+	_collision.shape = _collision.shape.duplicate()
+	set_physics_process(false)
+
+
+func setup(runner_profile: RunnerProfile) -> void:
+	profile = runner_profile
+	lives = profile.lives
+	_body.color = profile.color
+	_set_height(SIZE.y)
+	set_physics_process(true)
+
+
+func _physics_process(delta: float) -> void:
+	if is_on_floor():
+		_air_jumps_left = profile.max_jumps - 1
+	else:
+		velocity.y += _gravity * delta
+
+	if _slide_time_left > 0.0:
+		_slide_time_left -= delta
+		if _slide_time_left <= 0.0:
+			_end_slide()
+	_stop_time_left = maxf(_stop_time_left - delta, 0.0)
+	_stun_time_left = maxf(_stun_time_left - delta, 0.0)
+	_update_invulnerability(delta)
+
+	var halted := is_down or _stop_time_left > 0.0 or _stun_time_left > 0.0
+	velocity.x = 0.0 if halted else profile.run_speed
+	move_and_slide()
+
+
+func can_act() -> bool:
+	return not is_down and _stun_time_left <= 0.0
+
+
+func is_sliding() -> bool:
+	return _slide_time_left > 0.0
+
+
+func jump() -> void:
+	if not can_act():
+		return
+	if is_on_floor():
+		velocity.y = profile.jump_velocity
+	elif _air_jumps_left > 0:
+		_air_jumps_left -= 1
+		velocity.y = profile.jump_velocity
+	else:
+		return
+	_end_slide()
+
+
+func slide() -> void:
+	if not can_act() or not is_on_floor():
+		return
+	_slide_time_left = SLIDE_DURATION
+	_set_height(SLIDE_HEIGHT)
+
+
+func stop() -> void:
+	if not can_act():
+		return
+	_stop_time_left = STOP_DURATION
+
+
+func take_hit() -> void:
+	if is_down or _invulnerable_time_left > 0.0:
+		return
+	lives -= 1
+	hit.emit(lives)
+	_end_slide()
+	if lives <= 0:
+		is_down = true
+		_body.color = profile.color.darkened(0.5)
+		knocked_out.emit()
+		return
+	_stun_time_left = STUN_DURATION
+	_invulnerable_time_left = INVULNERABLE_DURATION
+
+
+func _end_slide() -> void:
+	_slide_time_left = 0.0
+	_set_height(SIZE.y)
+
+
+func _set_height(height: float) -> void:
+	var rect := _collision.shape as RectangleShape2D
+	rect.size = Vector2(SIZE.x, height)
+	_collision.position.y = -height / 2.0
+	_body.offset_top = -height
+
+
+func _update_invulnerability(delta: float) -> void:
+	if _invulnerable_time_left <= 0.0:
+		return
+	_invulnerable_time_left -= delta
+	var blink_on := fmod(_invulnerable_time_left, 0.2) < 0.1
+	modulate.a = 0.4 if blink_on and _invulnerable_time_left > 0.0 else 1.0
