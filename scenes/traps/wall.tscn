@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/traps/trap.gd" id="1_trap"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(30, 70)
+
+[node name="Wall" type="Area2D"]
+z_index = 1
+script = ExtResource("1_trap")
+trap_type = "wall"
+display_name = "Wall"
+energy_cost = 3.0
+counter_action = "jump"
+width = 30.0
+card_color = Color(0.47, 0.33, 0.28, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -35)
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="Body" type="ColorRect" parent="."]
+offset_left = -15.0
+offset_top = -70.0
+offset_right = 15.0
+mouse_filter = 2
+color = Color(0.47, 0.33, 0.28, 1)

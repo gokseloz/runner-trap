@@ -36,7 +36,7 @@ func _spot_new_traps() -> void:
 	var profile := _runner.profile
 	for node in get_tree().get_nodes_in_group(Trap.GROUP):
 		var trap := node as Trap
-		if trap.consumed or _plans.has(trap) or _is_behind(trap):
+		if trap.consumed or trap.counter_action == "none" or _plans.has(trap) or _is_behind(trap):
 			continue
 		if trap.global_position.x - _runner.global_position.x > profile.vision_range:
 			continue

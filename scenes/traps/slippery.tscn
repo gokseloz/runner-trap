@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/traps/slippery.gd" id="1_slippery"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_slippery"]
+size = Vector2(300, 8)
+
+[node name="Slippery" type="Area2D"]
+script = ExtResource("1_slippery")
+trap_type = "slippery"
+display_name = "Slippery"
+energy_cost = 2.0
+counter_action = "none"
+is_surface = true
+width = 300.0
+card_color = Color(0.51, 0.83, 0.98, 1)
+one_shot = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_slippery")
+
+[node name="Surface" type="ColorRect" parent="."]
+offset_left = -150.0
+offset_top = -4.0
+offset_right = 150.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.51, 0.83, 0.98, 1)

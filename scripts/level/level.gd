@@ -24,6 +24,7 @@ const GHOST_VALID_COLOR := Color(0.3, 0.8, 0.4, 0.5)
 const GHOST_INVALID_COLOR := Color(0.9, 0.3, 0.3, 0.5)
 const GHOST_HEIGHT := 60.0
 
+## Leave empty to play GameState's current level.
 @export var level_data: LevelData
 
 var energy := 0.0
@@ -41,9 +42,20 @@ var _ghost: ColorRect
 @onready var _energy_bar: ProgressBar = $HUD/BottomPanel/EnergyRow/EnergyBar
 @onready var _energy_label: Label = $HUD/BottomPanel/EnergyRow/EnergyLabel
 @onready var _card_bar: HBoxContainer = $HUD/BottomPanel/CardBar
+@onready var _end_panel: Control = $HUD/EndPanel
+@onready var _end_title: Label = $HUD/EndPanel/Box/Title
+@onready var _end_stars: StarRow = $HUD/EndPanel/Box/Stars
+@onready var _retry_button: Button = $HUD/EndPanel/Box/Buttons/Retry
+@onready var _next_button: Button = $HUD/EndPanel/Box/Buttons/Next
 
 
 func _ready() -> void:
+	if level_data == null:
+		level_data = GameState.get_current_level()
+	_end_panel.hide()
+	_retry_button.pressed.connect(get_tree().reload_current_scene)
+	_next_button.pressed.connect(_go_to_next_level)
+
 	_build_track()
 	_build_ghost()
 	_build_cards()
@@ -98,6 +110,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_runner.take_hit()
 		KEY_R:
 			get_tree().reload_current_scene()
+		KEY_N:
+			GameState.current_level_index = (GameState.current_level_index + 1) % GameState.LEVELS.size()
+			get_tree().reload_current_scene()
 
 
 ## Places the card's trap at the dropped screen position. Returns false if not allowed.
@@ -123,6 +138,8 @@ func _can_place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	if x + half_width > level_data.track_length:
 		return false
 	for trap in _placed_traps:
+		if trap.is_surface != card.trap_info.is_surface:
+			continue
 		if absf(trap.position.x - x) < (trap.width / 2.0 + half_width + MIN_TRAP_GAP):
 			return false
 	return true
@@ -139,7 +156,21 @@ func _end_game(player_won: bool) -> void:
 	_ghost.hide()
 	for card in _cards:
 		card.affordable = false
-	print("Runner knocked out — player wins" if player_won else "Runner reached the finish — player loses")
+
+	var stars := 0
+	if player_won:
+		var remaining := clampf(1.0 - _runner.position.x / level_data.track_length, 0.0, 1.0)
+		stars = level_data.get_stars(remaining)
+		GameState.set_level_stars(level_data.level_id, stars)
+	_end_title.text = "Runner down!" if player_won else "Runner escaped!"
+	_end_stars.filled = stars
+	_next_button.visible = player_won and GameState.has_next_level()
+	_end_panel.show()
+
+
+func _go_to_next_level() -> void:
+	GameState.current_level_index += 1
+	get_tree().reload_current_scene()
 
 
 func _update_camera() -> void:
@@ -148,7 +179,7 @@ func _update_camera() -> void:
 
 
 func _update_lives_label() -> void:
-	_lives_label.text = "Lives: %d" % _runner.lives
+	_lives_label.text = "%s  ·  Lives: %d" % [level_data.display_name, _runner.lives]
 
 
 func _update_energy_ui() -> void:

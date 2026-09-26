@@ -11,8 +11,10 @@ const GROUP := "traps"
 @export var trap_type := "trap"
 @export var display_name := "Trap"
 @export var energy_cost := 2.0
-## What the runner AI should do to avoid this trap: "jump", "slide", "stop".
+## What the runner AI should do to avoid this trap: "jump", "slide", "stop", or "none".
 @export var counter_action := "jump"
+## Surface traps lie on the ground and may overlap regular traps (combos).
+@export var is_surface := false
 ## Horizontal footprint on the track, used for placement and the drag ghost.
 @export var width := 80.0
 @export var card_color := Color.WHITE

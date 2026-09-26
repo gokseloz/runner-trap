@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/traps/saw.gd" id="1_saw"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_saw"]
+radius = 16.0
+
+[node name="Saw" type="Area2D"]
+z_index = 1
+script = ExtResource("1_saw")
+trap_type = "saw"
+display_name = "Saw"
+energy_cost = 2.0
+counter_action = "slide"
+width = 40.0
+card_color = Color(0.9, 0.22, 0.21, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -54)
+shape = SubResource("CircleShape2D_saw")
+
+[node name="Pole" type="ColorRect" parent="."]
+offset_left = -2.0
+offset_top = -260.0
+offset_right = 2.0
+offset_bottom = -54.0
+mouse_filter = 2
+color = Color(0.33, 0.43, 0.48, 1)
+
+[node name="Blade" type="Polygon2D" parent="."]
+position = Vector2(0, -54)
+color = Color(0.9, 0.22, 0.21, 1)

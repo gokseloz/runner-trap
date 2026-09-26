@@ -8,19 +8,20 @@ var _failures := 0
 
 
 func _initialize() -> void:
+	# Autoloads aren't visible by name to -s scripts at compile time.
+	var game_state := root.get_node("GameState")
+	game_state.persist = false
+	game_state.current_level_index = 0
 	_level = load("res://scenes/level.tscn").instantiate()
 	root.add_child(_level)
 	_runner = _level.get_node("Runner")
-	# Deterministic AI for tests.
-	var profile: RunnerProfile = _level.level_data.runner
-	profile.reaction_jitter = 0.0
-	profile.timing_error = 0.0
-	profile.mistake_chance = 0.0
 
 
 func _physics_process(_delta: float) -> bool:
 	_frame += 1
 	match _frame:
+		1:
+			_make_ai_deterministic()
 		60:
 			_check(_runner.is_on_floor(), "runner lands on ground")
 			_check(_runner.position.x > 150.0, "runner moves right (x=%.0f)" % _runner.position.x)
@@ -52,6 +53,9 @@ func _physics_process(_delta: float) -> bool:
 			_check(_runner.is_down, "runner knocked out after 3 hits")
 			_check(_level._game_over, "game over after knockout")
 			_check(not _runner.ai.enabled, "AI disabled after game over")
+			_check(_level._end_panel.visible, "end panel shown")
+			_check(_level._end_stars.filled >= 1, "stars awarded (%d)" % _level._end_stars.filled)
+			_check(_level._next_button.visible, "next level button shown")
 		650:
 			print("DONE: %d failure(s)" % _failures)
 			return true
@@ -78,6 +82,14 @@ func _test_placement() -> void:
 func _place_ahead(distance: float) -> bool:
 	var screen_pos := root.get_canvas_transform() * Vector2(_runner.position.x + distance, 600.0)
 	return _level.place_card(_level._cards[0], screen_pos)
+
+
+## Call once the level is ready. The profile must be edited on the runner itself:
+## a reference taken before the scene is ready can be freed and reloaded from disk.
+func _make_ai_deterministic() -> void:
+	_runner.profile.reaction_jitter = 0.0
+	_runner.profile.timing_error = 0.0
+	_runner.profile.mistake_chance = 0.0
 
 
 func _check(condition: bool, label: String) -> void:

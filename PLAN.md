@@ -34,11 +34,12 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Git repo, `.gitignore`, proje iskeleti
 
 ### Faz 1 — Prototip (1. hafta)
-- [ ] Kutu grafikler, yatay kamera takibi
-- [ ] 1 runner, 4 tuzak: çukur, duvar, testere, kaygan zemin
-- [ ] Enerji sistemi, kart sürükle-bırak
-- [ ] Can sistemi, kazanma/kaybetme ekranı
-- [ ] 3 test leveli
+- [x] Kutu grafikler, yatay kamera takibi
+- [x] 1 runner, 4 tuzak: çukur, duvar, testere, kaygan zemin (+ hızlı/sakar runner, level 3)
+- [x] Enerji sistemi, kart sürükle-bırak
+- [x] Can sistemi, kazanma/kaybetme ekranı
+- [x] 3 test leveli
+- [x] Runner yapay zekası + öğrenme (Faz 2'den öne çekildi)
 - [ ] **Karar noktası:** Oyun eğlenceli mi? Değilse mekaniği değiştir.
 
 ### Faz 2 — Oyun içeriği (2.–3. hafta)

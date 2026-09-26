@@ -17,6 +17,8 @@ var lives := 0
 var is_down := false
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+## Set by surface traps (e.g. slippery floor) while the runner is on them.
+var speed_multiplier := 1.0
 
 var _air_jumps_left := 0
 var _slide_time_left := 0.0
@@ -59,7 +61,7 @@ func _physics_process(delta: float) -> void:
 	_update_invulnerability(delta)
 
 	var halted := is_down or _stop_time_left > 0.0 or _stun_time_left > 0.0
-	velocity.x = 0.0 if halted else profile.run_speed
+	velocity.x = 0.0 if halted else profile.run_speed * speed_multiplier
 	move_and_slide()
 
 

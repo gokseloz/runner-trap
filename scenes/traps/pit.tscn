@@ -6,6 +6,7 @@
 size = Vector2(60, 8)
 
 [node name="Pit" type="Area2D"]
+z_index = 1
 script = ExtResource("1_trap")
 trap_type = "pit"
 display_name = "Pit"

@@ -4,6 +4,12 @@
 
 [resource]
 script = ExtResource("1_profile")
-display_name = "Basic Runner"
-reaction_time = 0.6
-learning_rate = 0.06
+display_name = "Fast Runner"
+run_speed = 380.0
+color = Color(1, 0.6, 0.2, 1)
+vision_range = 700.0
+reaction_time = 0.45
+reaction_jitter = 0.15
+timing_error = 35.0
+mistake_chance = 0.12
+learning_rate = 0.08
