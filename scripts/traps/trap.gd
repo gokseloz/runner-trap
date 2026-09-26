@@ -5,6 +5,8 @@ extends Area2D
 
 signal runner_hit(trap: Trap)
 
+const GROUP := "traps"
+
 ## Identifier used by the runner's learning system.
 @export var trap_type := "trap"
 @export var display_name := "Trap"
@@ -21,7 +23,21 @@ var consumed := false
 
 
 func _ready() -> void:
+	add_to_group(GROUP)
 	body_entered.connect(_on_body_entered)
+
+
+## Distance (runner center to trap center) at which the ideal counter action starts.
+func get_action_distance(runner: Runner) -> float:
+	match counter_action:
+		"jump":
+			# Take off so the jump apex is over the trap center.
+			var air_time := 2.0 * absf(runner.profile.jump_velocity) / runner.gravity
+			return runner.profile.run_speed * air_time / 2.0
+		"slide":
+			return width / 2.0 + Runner.SIZE.x
+		_:
+			return width / 2.0 + Runner.SIZE.x + 20.0
 
 
 func _on_body_entered(body: Node2D) -> void:

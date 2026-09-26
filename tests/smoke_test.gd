@@ -5,13 +5,17 @@ var _level: Node
 var _runner: Runner
 var _frame := 0
 var _failures := 0
-var _pit_x := 0.0
 
 
 func _initialize() -> void:
 	_level = load("res://scenes/level.tscn").instantiate()
 	root.add_child(_level)
 	_runner = _level.get_node("Runner")
+	# Deterministic AI for tests.
+	var profile: RunnerProfile = _level.level_data.runner
+	profile.reaction_jitter = 0.0
+	profile.timing_error = 0.0
+	profile.mistake_chance = 0.0
 
 
 func _physics_process(_delta: float) -> bool:
@@ -21,26 +25,34 @@ func _physics_process(_delta: float) -> bool:
 			_check(_runner.is_on_floor(), "runner lands on ground")
 			_check(_runner.position.x > 150.0, "runner moves right (x=%.0f)" % _runner.position.x)
 			_test_placement()
-		150:
-			_check(_runner.lives == 2, "pit hits runner (lives=%d)" % _runner.lives)
-			_check(_level._placed_traps[0].consumed, "pit consumed after hit")
-		240:
+		220:
+			_check(_runner.lives == 3, "AI jumps over far pit (lives=%d)" % _runner.lives)
+			_check(_runner.is_on_floor(), "runner landed after dodging")
+		230:
+			_check(_place_ahead(170.0), "place pit close to runner")
+		300:
+			_check(_runner.lives == 2, "AI too slow for close pit (lives=%d)" % _runner.lives)
+			_check(_runner.ai.seen_counts.get("pit", 0) == 2, "AI counted 2 pits")
+			var learned := _runner.ai.get_reaction_time("pit")
+			_check(learned < _runner.profile.reaction_time, "AI learned: reaction %.2f -> %.2f" % [_runner.profile.reaction_time, learned])
+		400:
 			_runner.jump()
-		250:
+		410:
 			_check(not _runner.is_on_floor(), "runner is airborne after jump")
-		330:
+		490:
 			_check(_runner.is_on_floor(), "runner lands after jump")
 			_runner.slide()
 			_check(_runner.is_sliding(), "runner slides")
-		380:
+		540:
 			_check(_runner.take_hit(), "hit lands")
 			_check(_runner.lives == 1, "hit removes a life")
 			_check(not _runner.take_hit(), "invulnerable right after hit")
-		500:
+		640:
 			_check(_runner.take_hit(), "final hit lands")
 			_check(_runner.is_down, "runner knocked out after 3 hits")
 			_check(_level._game_over, "game over after knockout")
-		510:
+			_check(not _runner.ai.enabled, "AI disabled after game over")
+		650:
 			print("DONE: %d failure(s)" % _failures)
 			return true
 	return false
@@ -51,21 +63,21 @@ func _test_placement() -> void:
 	var cost := card.trap_info.energy_cost
 	var energy_before: float = _level.energy
 
-	_check(not _level.place_card(card, _world_to_screen(_runner.position.x - 100.0)), "can't place behind runner")
-	_check(not _level.place_card(card, _world_to_screen(_runner.position.x + 50.0)), "can't place under runner")
-
-	_pit_x = _runner.position.x + 300.0
-	_check(_level.place_card(card, _world_to_screen(_pit_x)), "place pit ahead of runner")
+	_check(not _place_ahead(-100.0), "can't place behind runner")
+	_check(not _place_ahead(50.0), "can't place under runner")
+	_check(_place_ahead(500.0), "place pit far ahead")
 	_check(is_equal_approx(_level.energy, energy_before - cost), "energy spent (%.1f -> %.1f)" % [energy_before, _level.energy])
-	_check(not _level.place_card(card, _world_to_screen(_pit_x + 30.0)), "can't overlap existing trap")
+	_check(not _place_ahead(530.0), "can't overlap existing trap")
 
+	var energy_after: float = _level.energy
 	_level.energy = 0.0
-	_check(not _level.place_card(card, _world_to_screen(_pit_x + 400.0)), "can't place without energy")
-	_level.energy = energy_before - cost
+	_check(not _place_ahead(900.0), "can't place without energy")
+	_level.energy = energy_after
 
 
-func _world_to_screen(world_x: float) -> Vector2:
-	return root.get_canvas_transform() * Vector2(world_x, 600.0)
+func _place_ahead(distance: float) -> bool:
+	var screen_pos := root.get_canvas_transform() * Vector2(_runner.position.x + distance, 600.0)
+	return _level.place_card(_level._cards[0], screen_pos)
 
 
 func _check(condition: bool, label: String) -> void:

@@ -1,6 +1,6 @@
 class_name Runner
 extends CharacterBody2D
-## Auto-running character. The AI (later) decides when to call jump(), slide() or stop().
+## Auto-running character. Its RunnerAI child decides when to call jump(), slide() or stop().
 
 signal hit(lives_left: int)
 signal knocked_out
@@ -16,7 +16,8 @@ var profile: RunnerProfile
 var lives := 0
 var is_down := false
 
-var _gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+
 var _air_jumps_left := 0
 var _slide_time_left := 0.0
 var _stop_time_left := 0.0
@@ -25,6 +26,8 @@ var _invulnerable_time_left := 0.0
 
 @onready var _collision: CollisionShape2D = $CollisionShape2D
 @onready var _body: ColorRect = $Body
+@onready var _alert: Label = $Alert
+@onready var ai: RunnerAI = $AI
 
 
 func _ready() -> void:
@@ -45,7 +48,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		_air_jumps_left = profile.max_jumps - 1
 	else:
-		velocity.y += _gravity * delta
+		velocity.y += gravity * delta
 
 	if _slide_time_left > 0.0:
 		_slide_time_left -= delta
@@ -68,30 +71,39 @@ func is_sliding() -> bool:
 	return _slide_time_left > 0.0
 
 
-func jump() -> void:
+## Action methods return false when the action isn't possible right now.
+func jump() -> bool:
 	if not can_act():
-		return
+		return false
 	if is_on_floor():
 		velocity.y = profile.jump_velocity
 	elif _air_jumps_left > 0:
 		_air_jumps_left -= 1
 		velocity.y = profile.jump_velocity
 	else:
-		return
+		return false
 	_end_slide()
+	return true
 
 
-func slide() -> void:
+func slide() -> bool:
 	if not can_act() or not is_on_floor():
-		return
+		return false
 	_slide_time_left = SLIDE_DURATION
 	_set_height(SLIDE_HEIGHT)
+	return true
 
 
-func stop() -> void:
+func stop() -> bool:
 	if not can_act():
-		return
+		return false
 	_stop_time_left = STOP_DURATION
+	return true
+
+
+## Shows the "!" while the AI has spotted a trap but can't react yet.
+func set_alert(active: bool) -> void:
+	_alert.visible = active
 
 
 ## Returns false if the hit was ignored (already down or invulnerable).
@@ -103,6 +115,7 @@ func take_hit() -> bool:
 	_end_slide()
 	if lives <= 0:
 		is_down = true
+		set_alert(false)
 		_body.color = profile.color.darkened(0.5)
 		knocked_out.emit()
 		return true

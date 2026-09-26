@@ -80,10 +80,14 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Debug controls until the runner AI exists.
+	# Debug controls.
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	match event.physical_keycode:
+		KEY_A:
+			_runner.ai.enabled = not _runner.ai.enabled
+			_runner.set_alert(false)
+			print("Runner AI ", "on" if _runner.ai.enabled else "off")
 		KEY_SPACE, KEY_UP:
 			_runner.jump()
 		KEY_DOWN:
@@ -130,6 +134,8 @@ func _screen_to_world(screen_pos: Vector2) -> Vector2:
 
 func _end_game(player_won: bool) -> void:
 	_game_over = true
+	_runner.ai.enabled = false
+	_runner.set_alert(false)
 	_ghost.hide()
 	for card in _cards:
 		card.affordable = false
