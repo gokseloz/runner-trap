@@ -42,6 +42,20 @@ func get_action_distance(runner: Runner) -> float:
 			return width / 2.0 + Runner.SIZE.x + 20.0
 
 
+## World-space bounding box of the trap's collision shapes, used by the AI to plan jumps.
+func get_hit_rect() -> Rect2:
+	var result := Rect2()
+	var first := true
+	for child in get_children():
+		var shape_node := child as CollisionShape2D
+		if shape_node == null or shape_node.shape == null:
+			continue
+		var rect := shape_node.global_transform * shape_node.shape.get_rect()
+		result = rect if first else result.merge(rect)
+		first = false
+	return result
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if consumed or not body is Runner:
 		return

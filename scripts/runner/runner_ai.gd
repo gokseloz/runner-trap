@@ -5,6 +5,13 @@ extends Node
 
 signal trap_spotted(trap: Trap, reaction_time: float)
 
+## Jump planning: candidate takeoff spacing, arc sample step, safety margin around traps,
+## and how long after landing the path must stay clear (time to react again).
+const TAKEOFF_STEP := 5.0
+const SIM_STEP := 1.0 / 60.0
+const HAZARD_MARGIN := 2.0
+const POST_LANDING_TIME := 0.15
+
 var enabled := true
 var rng := RandomNumberGenerator.new()
 ## trap_type -> number of times spotted, drives learning.
@@ -53,6 +60,7 @@ func _spot_new_traps() -> void:
 
 func _follow_plans() -> void:
 	var thinking := false
+	var next_jump: Trap = null
 	for key in _plans.keys():
 		if not is_instance_valid(key):
 			_plans.erase(key)
@@ -68,10 +76,59 @@ func _follow_plans() -> void:
 		if _time < plan.ready_at:
 			thinking = true
 			continue
+		if trap.counter_action == "jump" and _runner.is_on_floor():
+			if next_jump == null or trap.global_position.x < next_jump.global_position.x:
+				next_jump = trap
+			continue
 		if trap.global_position.x - _runner.global_position.x > plan.action_distance:
 			continue
 		plan.done = _perform(trap.counter_action)
+	if next_jump != null and _should_jump_now(next_jump):
+		_plans[next_jump].done = _runner.jump()
 	_runner.set_alert(thinking)
+
+
+## Picks the takeoff point closest to the ideal one whose arc avoids every trap the runner
+## knows about, so a trap on the landing spot is only a threat if it shows up too late.
+## Returns true when that point is the runner's current position.
+func _should_jump_now(target: Trap) -> bool:
+	var runner_x := _runner.global_position.x
+	var ideal_x: float = target.global_position.x - _plans[target].action_distance
+	if runner_x >= ideal_x and _is_clean_jump(0.0):
+		return true
+	var best_offset := INF
+	var offset := 0.0
+	var max_offset := target.global_position.x - runner_x
+	while offset <= max_offset:
+		if _is_clean_jump(offset) and absf(runner_x + offset - ideal_x) < absf(runner_x + best_offset - ideal_x):
+			best_offset = offset
+		offset += TAKEOFF_STEP
+	if best_offset == INF:
+		# No safe takeoff: go for the ideal one and hope.
+		return runner_x >= ideal_x
+	return best_offset < TAKEOFF_STEP
+
+
+## Simulates a jump taken `offset` px ahead of the runner, plus a short run after landing.
+func _is_clean_jump(offset: float) -> bool:
+	var hazards: Array[Rect2] = []
+	for trap: Trap in _plans:
+		var plan: Dictionary = _plans[trap]
+		if is_instance_valid(trap) and not trap.consumed and not plan.ignored and _time >= plan.ready_at:
+			hazards.append(trap.get_hit_rect().grow(HAZARD_MARGIN))
+	var speed := _runner.profile.run_speed * _runner.speed_multiplier
+	var start := _runner.global_position + Vector2(offset, 0.0)
+	var air_time := 2.0 * absf(_runner.profile.jump_velocity) / _runner.gravity
+	var t := 0.0
+	while t <= air_time + POST_LANDING_TIME:
+		var air_t := minf(t, air_time)
+		var feet := start + Vector2(speed * t, _runner.profile.jump_velocity * air_t + 0.5 * _runner.gravity * air_t * air_t)
+		var body := Rect2(feet.x - Runner.SIZE.x / 2.0, feet.y - Runner.SIZE.y, Runner.SIZE.x, Runner.SIZE.y)
+		for hazard in hazards:
+			if body.intersects(hazard):
+				return false
+		t += SIM_STEP
+	return true
 
 
 func _perform(action: String) -> bool:
