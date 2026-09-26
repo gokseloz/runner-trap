@@ -1,0 +1,67 @@
+# Ters Runner — Proje Planı
+
+## Konsept
+Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı tuzak kartları atarak runner'ı bitiş çizgisine varmadan düşürmeye çalışıyor.
+
+## Kararlar
+| Konu | Karar |
+|---|---|
+| Motor | Godot 4 + GDScript, 2D |
+| Ekran | Yatay (landscape), runner soldan sağa koşar |
+| Kazanma | Can sistemi: runner'ın 3 canı var, bitişe varmadan 3 kez düşür |
+| Yıldız | Kalan enerji / süreye göre 1–3 yıldız |
+| Görsel stil | Minimal / flat (düz renkler, basit şekiller) |
+| Dil | TR + EN baştan (Godot çeviri sistemi) |
+| Para kazanma | AdMob ödüllü reklam + reklam kaldırma satın alımı + kozmetik |
+
+## Temel mekanikler
+- **Tuzak kartları:** Ekranın altında 3–4 kart var. Sürükleyip runner'ın önündeki yola bırakılıyor.
+- **Enerji:** Her tuzağın maliyeti var, enerji zamanla doluyor.
+- **Runner yapay zekası:** Önündeki tuzağı görüyor ve tepki veriyor (zıplama, kayma, durma). Tepki süresi ve beceri değerleri runner tipine göre değişiyor.
+- **Öğrenme:** Aynı tuzak tipi tekrar tekrar kullanılırsa runner ona alışıyor, tepki süresi kısalıyor.
+- **Kombolar:** Tuzak kombinasyonları (ör. kaygan zemin + çukur) başarı şansını artırıyor.
+- **Runner tipleri:** Hızlı/sakar, yavaş/çift zıplayan, duvara tırmanan ninja, boss runner'lar.
+
+## Mimari
+- Level'lar `Resource` (`.tres`) veri dosyası olarak tutulur, level eklemek için kod gerekmez.
+- Tüm tuzaklar ortak `Trap` temel sınıfından türer.
+- Runner parametreleri (hız, tepki süresi, zıplama gücü) `RunnerProfile` resource'unda.
+- Oyun durumu tek bir autoload singleton'da (`GameState`), kayıtlar `user://save.cfg` dosyasında.
+
+## Fazlar
+### Faz 0 — Kurulum
+- [x] Godot 4 kurulumu (`brew install --cask godot`) — 4.7.2
+- [x] Git repo, `.gitignore`, proje iskeleti
+
+### Faz 1 — Prototip (1. hafta)
+- [ ] Kutu grafikler, yatay kamera takibi
+- [ ] 1 runner, 4 tuzak: çukur, duvar, testere, kaygan zemin
+- [ ] Enerji sistemi, kart sürükle-bırak
+- [ ] Can sistemi, kazanma/kaybetme ekranı
+- [ ] 3 test leveli
+- [ ] **Karar noktası:** Oyun eğlenceli mi? Değilse mekaniği değiştir.
+
+### Faz 2 — Oyun içeriği (2.–3. hafta)
+- [ ] Runner öğrenme sistemi, kombolar
+- [ ] 10 level, level seçme ekranı, yıldızlar
+- [ ] Kayıt sistemi
+- [ ] TR/EN çeviri
+
+### Faz 3 — Android
+- [ ] JDK 17, Android SDK, Godot export templates
+- [ ] Telefonda test, dokunmatik ayar, performans
+
+### Faz 4 — Görsel ve ses
+- [ ] Flat stil asset'ler, efektler (ekran sarsıntısı, partikül, düşme animasyonu)
+- [ ] Müzik ve efekt sesleri
+
+### Faz 5 — Yayın
+- [ ] Play Console hesabı (tek seferlik 25 $)
+- [ ] AdMob entegrasyonu, gizlilik politikası
+- [ ] Mağaza görselleri ve açıklama
+- [ ] **Kapalı test: en az 12 test kullanıcısı, 14 gün kesintisiz** (kişisel hesaplar için zorunlu)
+- [ ] Production yayını
+
+## Açık konular
+- Oyunun adı ("Ters Runner" geçici isim)
+- 12 test kullanıcısı listesi

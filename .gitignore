@@ -1,0 +1,17 @@
+# Godot 4
+.godot/
+/android/
+*.tmp
+*.translation
+
+# Export output
+/build/
+*.apk
+*.aab
+
+# Signing
+*.keystore
+*.jks
+
+# OS
+.DS_Store
