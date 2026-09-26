@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/level_data.gd" id="1_level"]
 [ext_resource type="Resource" path="res://resources/runners/basic_runner.tres" id="2_runner"]
+[ext_resource type="PackedScene" path="res://scenes/traps/pit.tscn" id="3_pit"]
 
 [resource]
 script = ExtResource("1_level")
 level_id = "level_01"
 runner = ExtResource("2_runner")
+available_traps = Array[PackedScene]([ExtResource("3_pit")])

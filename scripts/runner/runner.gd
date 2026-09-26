@@ -94,9 +94,10 @@ func stop() -> void:
 	_stop_time_left = STOP_DURATION
 
 
-func take_hit() -> void:
+## Returns false if the hit was ignored (already down or invulnerable).
+func take_hit() -> bool:
 	if is_down or _invulnerable_time_left > 0.0:
-		return
+		return false
 	lives -= 1
 	hit.emit(lives)
 	_end_slide()
@@ -104,9 +105,10 @@ func take_hit() -> void:
 		is_down = true
 		_body.color = profile.color.darkened(0.5)
 		knocked_out.emit()
-		return
+		return true
 	_stun_time_left = STUN_DURATION
 	_invulnerable_time_left = INVULNERABLE_DURATION
+	return true
 
 
 func _end_slide() -> void:
