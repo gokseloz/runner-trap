@@ -8,6 +8,7 @@ const JUMPER_LEVEL := 5
 var _level: Node
 var _runner: Runner
 var _failures := 0
+var _combos: Array[String] = []
 
 
 func _initialize() -> void:
@@ -38,6 +39,7 @@ func _start_level(index: int) -> void:
 	_level = load("res://scenes/level.tscn").instantiate()
 	root.add_child(_level)
 	_runner = _level.get_node("Runner")
+	_level.combo_landed.connect(_combos.append)
 	await _wait(1)
 	_make_ai_deterministic()
 	await _wait(30)
@@ -69,6 +71,8 @@ func _test_landing_trap_mid_air(should_hit: bool) -> void:
 	await _wait_until_traps_behind()
 	var label := "mid-air landing trap hits" if should_hit else "air jump dodges mid-air landing trap"
 	_check((_runner.lives < lives_before) == should_hit, "%s (lives %d -> %d)" % [label, lives_before, _runner.lives])
+	if should_hit:
+		_check(not _combos.is_empty() and _combos.back() == "chain", "landing trap counts as chain combo (%s)" % [_combos])
 	await _recover()
 
 

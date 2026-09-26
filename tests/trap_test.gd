@@ -5,6 +5,7 @@ extends SceneTree
 var _level: Node
 var _runner: Runner
 var _failures := 0
+var _combos: Array[String] = []
 
 
 func _initialize() -> void:
@@ -15,6 +16,7 @@ func _initialize() -> void:
 	_level = load("res://scenes/level.tscn").instantiate()
 	root.add_child(_level)
 	_runner = _level.get_node("Runner")
+	_level.combo_landed.connect(_combos.append)
 	_run()
 
 
@@ -24,6 +26,7 @@ func _run() -> void:
 	await _wait(30)
 	await _expect("Wall", 400.0, false, "AI jumps a far wall")
 	await _expect("Wall", 200.0, true, "AI too slow for a close wall")
+	_check(_combos.is_empty(), "lone close wall is no combo (%s)" % [_combos])
 	await _expect("Saw", 400.0, false, "AI slides under a far saw")
 	await _expect("Saw", 180.0, true, "AI too slow for a close saw")
 	await _expect("Pit", 300.0, false, "AI jumps a pit at 300")
@@ -42,6 +45,7 @@ func _test_slippery_combo() -> void:
 		await physics_frame
 	_check(_runner.speed_multiplier > 1.0, "slippery speeds runner up")
 	await _expect("Pit", 300.0, true, "slippery + pit combo hits at 300")
+	_check(_combos.back() == "slippery", "slippery combo counted (%s)" % [_combos])
 
 
 func _expect(trap_name: String, distance: float, should_hit: bool, label: String) -> void:

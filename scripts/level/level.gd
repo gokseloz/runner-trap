@@ -2,6 +2,9 @@ extends Node2D
 ## Runs a single level: builds the track, starts the runner, follows it with the camera,
 ## manages energy and turns dropped cards into traps.
 
+## kind is "chain" (hit right after a dodge) or "slippery" (hit on a slippery floor).
+signal combo_landed(kind: String)
+
 const GROUND_Y := 600.0
 ## Deep enough to fill the screen below the ground surface on tall aspect ratios.
 const GROUND_DEPTH := 600.0
@@ -24,13 +27,23 @@ const GHOST_VALID_COLOR := Color(0.3, 0.8, 0.4, 0.5)
 const GHOST_INVALID_COLOR := Color(0.9, 0.3, 0.3, 0.5)
 const GHOST_HEIGHT := 60.0
 
+## A hit counts as a chain combo if the runner dodged another trap this recently.
+const COMBO_WINDOW := 1.0
+const COMBO_ENERGY_BONUS := 2.0
+const COMBO_COLOR := Color("ff7043")
+
 ## Leave empty to play GameState's current level.
 @export var level_data: LevelData
 
 var energy := 0.0
+var combo_count := 0
 
 var _game_over := false
+var _time := 0.0
+var _last_dodge_time := -INF
 var _placed_traps: Array[Trap] = []
+## Traps the runner got past without being hit, so each dodge is counted once.
+var _dodged_traps: Dictionary = {}
 var _cards: Array[TrapCard] = []
 var _ghost: ColorRect
 
@@ -86,6 +99,8 @@ func _physics_process(delta: float) -> void:
 	_update_camera()
 	if _game_over:
 		return
+	_time += delta
+	_track_dodges()
 	energy = minf(energy + level_data.energy_regen_per_sec * delta, level_data.max_energy)
 	_update_energy_ui()
 	if not _runner.is_down and _runner.position.x >= level_data.track_length:
@@ -127,6 +142,7 @@ func place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	var trap: Trap = card.trap_scene.instantiate()
 	trap.position = Vector2(_screen_to_world(screen_pos).x, GROUND_Y)
 	_track.add_child(trap)
+	trap.runner_hit.connect(_on_trap_hit)
 	_placed_traps.append(trap)
 	_update_energy_ui()
 	return true
@@ -249,6 +265,47 @@ func _on_drag_hovered(card: TrapCard, screen_pos: Vector2, valid: bool) -> void:
 	_ghost.size.x = width
 	_ghost.color = GHOST_VALID_COLOR if valid else GHOST_INVALID_COLOR
 	_ghost.show()
+
+
+func _track_dodges() -> void:
+	var runner_back := _runner.position.x - Runner.SIZE.x / 2.0
+	for trap in _placed_traps:
+		if trap.consumed or trap.is_surface or _dodged_traps.has(trap):
+			continue
+		if trap.position.x + trap.width / 2.0 < runner_back:
+			_dodged_traps[trap] = true
+			_last_dodge_time = _time
+
+
+func _on_trap_hit(_trap: Trap) -> void:
+	var kind := ""
+	if _runner.speed_multiplier > 1.0:
+		kind = "slippery"
+	elif _time - _last_dodge_time <= COMBO_WINDOW:
+		kind = "chain"
+	if kind.is_empty():
+		return
+	combo_count += 1
+	energy = minf(energy + COMBO_ENERGY_BONUS, level_data.max_energy)
+	_update_energy_ui()
+	_show_combo_popup()
+	combo_landed.emit(kind)
+
+
+func _show_combo_popup() -> void:
+	var label := Label.new()
+	label.text = tr("Combo! +%d") % COMBO_ENERGY_BONUS
+	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_color_override("font_color", COMBO_COLOR)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.size.x = 240.0
+	label.position = _runner.position + Vector2(-label.size.x / 2.0, -140.0)
+	label.z_index = 20
+	_track.add_child(label)
+	var tween := label.create_tween().set_parallel()
+	tween.tween_property(label, "position:y", label.position.y - 60.0, 0.9)
+	tween.tween_property(label, "modulate:a", 0.0, 0.9).set_delay(0.3)
+	tween.chain().tween_callback(label.queue_free)
 
 
 func _on_runner_hit(_lives_left: int) -> void:
