@@ -61,13 +61,20 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 ### Faz 5 — Yayın
 - [x] Play Console hesabı (tek seferlik 25 $)
 - [x] Uygulama ikonu (tools/make_icon.gd), imzalı AAB (tools/export_release.sh, upload key `~/Keys/runner-trap/`, repo dışında)
-- [x] Kaybedince "reklam izle, runner -1 canla tekrar" butonu (Ads autoload şimdilik sahte, ödülü hemen veriyor)
-- [ ] AdMob eklentisi + AB izin ekranı (UMP) + ayarlardan izni değiştirme
+- [x] Kaybedince "reklam izle, runner -1 canla tekrar" butonu
+- [x] AdMob eklentisi + AB izin ekranı (UMP) + level seçme ekranında gizlilik butonu (telefonda test reklamı doğrulandı)
+- [x] Oyun içi duraklatma menüsü (devam, yeniden başla, level'lar; Android geri tuşu ve uygulamadan çıkınca otomatik duraklatma)
+- [x] Play Console CLI (`gplay`) + tek komutla yayın (`tools/release.sh`), kod GitHub'da (private)
+- [x] Data safety + reklam kimliği formları AdMob'a göre güncellendi, mağaza sayfası TR/EN
+- [x] Kapalı teste versionCode 2 yüklendi (incelemede, 2026-09-27)
+- [ ] AdMob ödeme profili (sahibi yapacak)
+- [ ] Upload key yedeği (`~/Keys/runner-trap/`, şifreli DMG, sahibi yapacak)
 - [x] Gizlilik politikası taslağı (docs/privacy-policy.md): web'de yayınlanmalı (Google Sites)
 - [x] Mağaza açıklaması TR/EN (docs/store-listing.md)
 - [x] Mağaza görselleri: feature graphic 1024x500, ekran görüntüleri (`tools/capture_store.gd` → build/store/)
 - [ ] **Kapalı test: en az 12 test kullanıcısı, 14 gün kesintisiz** (kişisel hesaplar için zorunlu)
 - [ ] Production yayını
+- [ ] Yayından sonra: AdMob uygulamasını Play mağaza sayfasına bağla
 
 ## Açık konular
 - ~~Oyunun adı~~ → **Runner Trap** (paket: `com.goezkazanc.runnertrap`)
