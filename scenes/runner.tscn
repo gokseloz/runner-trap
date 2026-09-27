@@ -13,7 +13,9 @@ script = ExtResource("1_runner")
 position = Vector2(0, -32)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Body" type="ColorRect" parent="."]
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Body" type="ColorRect" parent="Visual"]
 offset_left = -20.0
 offset_top = -64.0
 offset_right = 20.0

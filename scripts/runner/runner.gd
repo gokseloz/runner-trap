@@ -11,6 +11,7 @@ const SLIDE_DURATION := 0.6
 const STOP_DURATION := 0.8
 const STUN_DURATION := 1.0
 const INVULNERABLE_DURATION := 1.5
+const HIT_FLASH_COLOR := Color("ff5252")
 
 var profile: RunnerProfile
 var lives := 0
@@ -25,9 +26,11 @@ var _slide_time_left := 0.0
 var _stop_time_left := 0.0
 var _stun_time_left := 0.0
 var _invulnerable_time_left := 0.0
+var _was_on_floor := true
 
 @onready var _collision: CollisionShape2D = $CollisionShape2D
-@onready var _body: ColorRect = $Body
+@onready var _visual: Node2D = $Visual
+@onready var _body: ColorRect = $Visual/Body
 @onready var _alert: Label = $Alert
 @onready var ai: RunnerAI = $AI
 
@@ -63,6 +66,9 @@ func _physics_process(delta: float) -> void:
 	var halted := is_down or _stop_time_left > 0.0 or _stun_time_left > 0.0
 	velocity.x = 0.0 if halted else profile.run_speed * speed_multiplier
 	move_and_slide()
+	if is_on_floor() and not _was_on_floor and not is_down:
+		Fx.squash(_visual, Vector2(1.25, 0.8))
+	_was_on_floor = is_on_floor()
 
 
 func can_act() -> bool:
@@ -89,6 +95,7 @@ func jump() -> bool:
 	else:
 		return false
 	_end_slide()
+	Fx.squash(_visual, Vector2(0.8, 1.2))
 	return true
 
 
@@ -122,12 +129,28 @@ func take_hit() -> bool:
 	if lives <= 0:
 		is_down = true
 		set_alert(false)
-		_body.color = profile.color.darkened(0.5)
+		_fall_over()
 		knocked_out.emit()
 		return true
+	_flash()
 	_stun_time_left = STUN_DURATION
 	_invulnerable_time_left = INVULNERABLE_DURATION
 	return true
+
+
+func _flash() -> void:
+	_body.color = HIT_FLASH_COLOR
+	create_tween().tween_property(_body, "color", profile.color, 0.25)
+
+
+## Tips forward onto the ground; the pivot is at the feet, so lift by half the body width.
+func _fall_over() -> void:
+	_visual.scale = Vector2.ONE
+	modulate.a = 1.0
+	var tween := create_tween().set_parallel().set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_visual, "rotation", PI / 2.0, 0.6)
+	tween.tween_property(_visual, "position:y", -SIZE.x / 2.0, 0.6)
+	tween.tween_property(_body, "color", profile.color.darkened(0.5), 0.6)
 
 
 func _end_slide() -> void:

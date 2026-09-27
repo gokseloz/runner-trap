@@ -32,6 +32,15 @@ const COMBO_WINDOW := 1.0
 const COMBO_ENERGY_BONUS := 2.0
 const COMBO_COLOR := Color("ff7043")
 
+## Camera shake strength (px) on a hit and on the knockout, and how fast it fades (px/s).
+const SHAKE_HIT := 10.0
+const SHAKE_KNOCKOUT := 22.0
+const SHAKE_DECAY := 60.0
+## Brief slow motion when the runner goes down.
+const KNOCKOUT_TIME_SCALE := 0.35
+const KNOCKOUT_SLOWMO_DURATION := 0.5
+const DUST_COLOR := Color("90a4ae")
+
 ## Leave empty to play GameState's current level.
 @export var level_data: LevelData
 
@@ -40,6 +49,7 @@ var combo_count := 0
 
 var _game_over := false
 var _time := 0.0
+var _shake := 0.0
 var _last_dodge_time := -INF
 var _placed_traps: Array[Trap] = []
 ## Traps the runner got past without being hit, so each dodge is counted once.
@@ -95,7 +105,12 @@ func _ready() -> void:
 	_update_camera()
 
 
+func _exit_tree() -> void:
+	Engine.time_scale = 1.0
+
+
 func _physics_process(delta: float) -> void:
+	_shake = move_toward(_shake, 0.0, SHAKE_DECAY * delta)
 	_update_camera()
 	if _game_over:
 		return
@@ -142,6 +157,8 @@ func place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	var trap: Trap = card.trap_scene.instantiate()
 	trap.position = Vector2(_screen_to_world(screen_pos).x, GROUND_Y)
 	_track.add_child(trap)
+	Fx.pop_in(trap)
+	Fx.burst(_track, trap.position, DUST_COLOR, 10, 150.0)
 	trap.runner_hit.connect(_on_trap_hit)
 	_placed_traps.append(trap)
 	_update_energy_ui()
@@ -196,6 +213,7 @@ func _go_to_next_level() -> void:
 func _update_camera() -> void:
 	var view_width := get_viewport_rect().size.x
 	_camera.position = Vector2(_runner.position.x + view_width * (0.5 - CAMERA_LEAD), CAMERA_Y)
+	_camera.offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake
 
 
 func _update_lives_label() -> void:
@@ -310,7 +328,15 @@ func _show_combo_popup() -> void:
 
 func _on_runner_hit(_lives_left: int) -> void:
 	_update_lives_label()
+	_shake = SHAKE_HIT
+	Fx.burst(_track, _runner.position + Vector2(0.0, -Runner.SIZE.y / 2.0), _runner.profile.color)
+	Input.vibrate_handheld(40)
 
 
 func _on_runner_knocked_out() -> void:
+	_shake = SHAKE_KNOCKOUT
+	Fx.burst(_track, _runner.position + Vector2(0.0, -Runner.SIZE.y / 2.0), _runner.profile.color.darkened(0.3), 30, 380.0)
+	Input.vibrate_handheld(150)
+	Engine.time_scale = KNOCKOUT_TIME_SCALE
+	get_tree().create_timer(KNOCKOUT_SLOWMO_DURATION, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
 	_end_game(true)
