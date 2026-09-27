@@ -45,7 +45,17 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=/opt/homebrew/share/android-
 tools/export_release.sh
 ```
 
-Both presets use the Gradle build (required by the AdMob plugin). Bump `version/code` in `export_presets.cfg` before every Play upload.
+Both presets use the Gradle build (required by the AdMob plugin).
+
+## Releasing to Google Play
+
+Edit `docs/release-notes.json`, then:
+
+```sh
+tools/release.sh [version_name] [track]   # e.g. tools/release.sh 1.0.1
+```
+
+It bumps the version code, runs the tests, builds the bundle, asks for confirmation, uploads it with [gplay](https://github.com/tamtom/play-console-cli) (default track: `alpha`, the closed test), then commits, tags `v<name>-<code>` and pushes. `DRY_RUN=1` stops after the build.
 
 ## Project layout
 
