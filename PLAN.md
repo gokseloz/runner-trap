@@ -40,7 +40,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Can sistemi, kazanma/kaybetme ekranı
 - [x] 3 test leveli
 - [x] Runner yapay zekası + öğrenme (Faz 2'den öne çekildi)
-- [ ] **Karar noktası:** Oyun eğlenceli mi? Değilse mekaniği değiştir.
+- [x] **Karar noktası:** Oyun eğlenceli mi? Değilse mekaniği değiştir.
 
 ### Faz 2 — Oyun içeriği (2.–3. hafta)
 - [x] Runner öğrenme sistemi (tepki süresi tuzak tipine alışıyor), kombolar (zincir + kaygan, +2 enerji)
@@ -51,7 +51,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 
 ### Faz 3 — Android
 - [x] JDK 17, Android SDK, Godot export templates (debug APK export çalışıyor)
-- [ ] Telefonda test, dokunmatik ayar, performans
+- [x] Telefonda test (kablosuz ADB, Galaxy S25 Ultra): dokunmatik ve performans sorunsuz; bot simülasyonuyla 6–10 dengelendi
 
 ### Faz 4 — Görsel ve ses
 - [ ] Flat stil asset'ler, efektler (ekran sarsıntısı, partikül, düşme animasyonu)
