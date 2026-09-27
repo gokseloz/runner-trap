@@ -13,6 +13,7 @@ const TEST_REWARDED_UNIT_ID := "ca-app-pub-3940256099942544/5224354917"
 const PLUGIN_SINGLETON := "PoingGodotAdMob"
 
 var _enabled := false
+var _initializing := false
 var _initialized := false
 var _loading := false
 var _rewarded_ad: RewardedAd
@@ -83,11 +84,15 @@ func _on_consent_info_failed(_error: FormError) -> void:
 
 func _start_ads() -> void:
 	consent_updated.emit()
-	if _initialized or not _can_request_ads():
+	if _initializing or not _can_request_ads():
 		return
-	_initialized = true
-	MobileAds.initialize()
-	_load_rewarded()
+	_initializing = true
+	# Loading before initialization completes crashes the SDK.
+	var listener := OnInitializationCompleteListener.new()
+	listener.on_initialization_complete = func(_status: InitializationStatus) -> void:
+		_initialized = true
+		_load_rewarded()
+	MobileAds.initialize(listener)
 
 
 func _can_request_ads() -> bool:
