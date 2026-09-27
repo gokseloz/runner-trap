@@ -83,12 +83,26 @@ var _can_continue := true
 @onready var _retry_button: Button = $HUD/EndPanel/Box/Buttons/Retry
 @onready var _next_button: Button = $HUD/EndPanel/Box/Buttons/Next
 @onready var _continue_button: Button = $HUD/EndPanel/Box/Continue
+@onready var _pause_button: Button = $HUD/PauseButton
+@onready var _pause_menu: Control = $HUD/PauseMenu
+@onready var _resume_button: Button = $HUD/PauseMenu/Panel/Box/Resume
+@onready var _restart_button: Button = $HUD/PauseMenu/Panel/Box/Restart
+@onready var _pause_levels_button: Button = $HUD/PauseMenu/Panel/Box/Levels
 
 
 func _ready() -> void:
 	if level_data == null:
 		level_data = GameState.get_current_level()
 	_end_panel.hide()
+	_pause_menu.hide()
+	# Android back opens the pause menu instead of closing the app.
+	get_tree().quit_on_go_back = false
+	for button: Button in [_pause_button, _resume_button, _restart_button, _pause_levels_button]:
+		button.pressed.connect(Audio.play.bind("click"))
+	_pause_button.pressed.connect(pause)
+	_resume_button.pressed.connect(resume)
+	_restart_button.pressed.connect(_leave.bind(get_tree().reload_current_scene))
+	_pause_levels_button.pressed.connect(_leave.bind(GameState.open_level_select))
 	for button: Button in [_levels_button, _retry_button, _next_button, _continue_button]:
 		button.pressed.connect(Audio.play.bind("click"))
 	_levels_button.pressed.connect(GameState.open_level_select)
@@ -133,6 +147,42 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
+	get_tree().paused = false
+	get_tree().quit_on_go_back = true
+
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_GO_BACK_REQUEST:
+			if _game_over:
+				GameState.open_level_select()
+			elif get_tree().paused:
+				resume()
+			else:
+				pause()
+		# Phone call, notification shade, app switch. Not during the end panel's ad.
+		NOTIFICATION_APPLICATION_FOCUS_OUT:
+			pause()
+
+
+## Freezes the level and shows the pause menu. Does nothing once the level has ended.
+func pause() -> void:
+	if _game_over or get_tree().paused:
+		return
+	get_tree().paused = true
+	_ghost.hide()
+	_pause_menu.show()
+
+
+func resume() -> void:
+	get_tree().paused = false
+	_pause_menu.hide()
+
+
+## Unpauses before switching scenes, so the next scene doesn't start frozen.
+func _leave(change_scene: Callable) -> void:
+	get_tree().paused = false
+	change_scene.call()
 
 
 func _physics_process(delta: float) -> void:
@@ -228,6 +278,7 @@ func _end_game(player_won: bool) -> void:
 		GameState.set_level_stars(level_data.level_id, stars)
 	_end_title.text = tr("Runner down!") if player_won else tr("Runner escaped!")
 	_end_stars.filled = stars
+	_pause_button.hide()
 	_next_button.visible = player_won and GameState.has_next_level()
 	_continue_button.visible = not player_won and _can_continue
 	_end_panel.show()

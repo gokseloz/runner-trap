@@ -22,7 +22,7 @@ func _run() -> void:
 		_check(row.size() == 3 and not row[1].is_empty() and not row[2].is_empty(), "'%s' has en and tr" % key)
 
 	# Every name shown in the game must be in the table.
-	var names: Array[String] = ["Runner down!", "Runner escaped!", "Lives: %d", "Cost %d", "Retry", "Next", "Levels", "Locked", "Combo! +%d", "Sound On", "Sound Off", "Watch ad: runner -1 life", "Retry: runner -1 life"]
+	var names: Array[String] = ["Runner down!", "Runner escaped!", "Lives: %d", "Cost %d", "Retry", "Next", "Levels", "Locked", "Combo! +%d", "Sound On", "Sound Off", "Watch ad: runner -1 life", "Retry: runner -1 life", "Paused", "Resume", "Restart"]
 	for trap_name in TRAP_SCENES:
 		var trap: Trap = load("res://scenes/traps/%s.tscn" % trap_name).instantiate()
 		names.append(trap.display_name)
