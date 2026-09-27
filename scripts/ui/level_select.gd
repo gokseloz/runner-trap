@@ -12,6 +12,7 @@ const SOUND_BUTTON_SHIFT := 180.0
 
 var buttons: Array[Button] = []
 var sound_button: Button
+var privacy_button: Button
 
 @onready var _grid: GridContainer = $Center/Box/Grid
 @onready var _language_button: Button = $LanguageButton
@@ -28,6 +29,7 @@ func _ready() -> void:
 	_language_button.text = GameState.LANGUAGES[other]
 	_language_button.pressed.connect(_on_language_pressed.bind(other))
 	_build_sound_button()
+	_build_privacy_button()
 	for button: Button in buttons + [_language_button]:
 		button.pressed.connect(Audio.play.bind("click"))
 
@@ -60,6 +62,27 @@ func _build_sound_button() -> void:
 	button.pressed.connect(_on_sound_pressed.bind(button))
 	add_child(button)
 	sound_button = button
+
+
+## Opens the ad consent form again. Only shown where the player must be able to change it.
+func _build_privacy_button() -> void:
+	var button := _language_button.duplicate(0) as Button
+	button.name = "PrivacyButton"
+	button.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	button.offset_left -= 2 * SOUND_BUTTON_SHIFT
+	button.offset_right -= 2 * SOUND_BUTTON_SHIFT
+	button.text = tr("Privacy")
+	button.pressed.connect(Ads.show_privacy_options)
+	button.pressed.connect(Audio.play.bind("click"))
+	add_child(button)
+	privacy_button = button
+	# Consent info arrives shortly after launch, possibly after this screen is up.
+	_update_privacy_button()
+	Ads.consent_updated.connect(_update_privacy_button)
+
+
+func _update_privacy_button() -> void:
+	privacy_button.visible = Ads.is_privacy_options_required()
 
 
 func _on_sound_pressed(button: Button) -> void:

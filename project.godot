@@ -8,12 +8,17 @@
 
 config_version=5
 
+[admob]
+
+general/android/app_id="ca-app-pub-4493910201796782~8732247508"
+general/ios/enabled=false
+
 [application]
 
 config/name="Runner Trap"
 run/main_scene="res://scenes/level_select.tscn"
-config/icon="res://assets/icon/icon.png"
 config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://assets/icon/icon.png"
 
 [autoload]
 
@@ -27,19 +32,21 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=0
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/admob/plugin.cfg")
 
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
 
-[rendering]
-
-renderer/rendering_method="mobile"
-environment/defaults/default_clear_color=Color(0.93, 0.95, 0.97, 1)
-textures/vram_compression/import_etc2_astc=true
-
 [internationalization]
 
 locale/translations=PackedStringArray("res://locale/translations.en.translation", "res://locale/translations.tr.translation")
-locale/fallback="en"
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.93, 0.95, 0.97, 1)

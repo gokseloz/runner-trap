@@ -18,3 +18,8 @@
 
 # Local Claude Code settings (may contain internal headers/secrets)
 .claude/
+
+# AdMob plugin: iOS binaries and download cache are fetched on demand
+/addons/admob/ios/bin/
+/addons/admob/downloads/
+/addons/admob/csharp/
