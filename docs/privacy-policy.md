@@ -36,7 +36,7 @@ If this policy changes, the new version will be posted at this address with a ne
 
 ## Contact
 
-Questions about this policy: **[CONTACT EMAIL]**
+Questions about this policy: gokselozkazanc08@gmail.com
 
 ---
 
@@ -78,4 +78,4 @@ Bu politika değişirse yeni sürüm, yeni bir "son güncelleme" tarihiyle bu ad
 
 ## İletişim
 
-Bu politikayla ilgili sorular için: **[İLETİŞİM E-POSTASI]**
+Bu politikayla ilgili sorular için: gokselozkazanc08@gmail.com

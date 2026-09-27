@@ -59,11 +59,11 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Müzik ve efekt sesleri (tools/make_sounds.gd ile sentezleniyor, ses aç/kapa butonu)
 
 ### Faz 5 — Yayın
-- [ ] Play Console hesabı (tek seferlik 25 $)
+- [x] Play Console hesabı (tek seferlik 25 $)
 - [x] Uygulama ikonu (tools/make_icon.gd), imzalı AAB (tools/export_release.sh, upload key `~/Keys/runner-trap/`, repo dışında)
 - [x] Kaybedince "reklam izle, runner -1 canla tekrar" butonu (Ads autoload şimdilik sahte, ödülü hemen veriyor)
 - [ ] AdMob eklentisi + AB izin ekranı (UMP) + ayarlardan izni değiştirme
-- [x] Gizlilik politikası taslağı (docs/privacy-policy.md): e-posta eksik, web'de yayınlanmalı
+- [x] Gizlilik politikası taslağı (docs/privacy-policy.md): web'de yayınlanmalı (Google Sites)
 - [x] Mağaza açıklaması TR/EN (docs/store-listing.md)
 - [ ] Mağaza görselleri: feature graphic 1024x500, ekran görüntüleri
 - [ ] **Kapalı test: en az 12 test kullanıcısı, 14 gün kesintisiz** (kişisel hesaplar için zorunlu)
