@@ -38,6 +38,16 @@ Read this whole file before working. It is the handover document: the owner does
 - Both export presets use the Gradle build; the build template is installed into the gitignored `android/` on the first `tools/export_release.sh` run.
 - `gplay` (Play Console CLI, `brew install tamtom/tap/gplay`): authenticated with the service account `gplay-146@runner-trap.iam.gserviceaccount.com` (GCP project `runner-trap`, Admin in Play Console), config `~/.gplay/config.json`. Always run as `GPLAY_NO_UPDATE=1 gplay ...`.
 
+## Setting up a new machine
+
+The repo has no secrets, so a fresh clone can build debug APKs and run tests but can't sign or upload a release until the keys are restored.
+
+1. Clone: `git clone git@github.com:gokseloz/runner-trap.git`. The owner must add the new machine's SSH public key (`~/.ssh/*.pub`, never the private key) in GitHub → Settings → SSH and GPG keys. Then set the repo-local identity (see Hard rules).
+2. Install: `brew install --cask godot`, `brew install openjdk@17`, `brew install --cask android-commandlinetools`, `brew install tamtom/tap/gplay`. Then `sdkmanager "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.1" "build-tools;36.1.0"` (what the current machine has) and install the Godot 4.7.2 export templates (Android).
+3. Keys: the owner restores `~/Keys/runner-trap/` (`upload.keystore`, `password.txt`, `play-api.json`) from their encrypted backup (`runner-trap-keys.dmg`). If the upload key is lost for good, Play Console → Test and release → App integrity → request an upload key reset; if `play-api.json` is lost, create a new key for the service account in Google Cloud Console (project `runner-trap`, IAM → Service accounts) and delete the old one.
+4. gplay auth: `GPLAY_NO_UPDATE=1 gplay auth login --service-account ~/Keys/runner-trap/play-api.json` (never `--local`, that writes config into the repo), then check with `GPLAY_NO_UPDATE=1 gplay tracks releases list --package com.goezkazanc.runnertrap --track alpha`.
+5. Run the tests, then `DRY_RUN=1 tools/release.sh` to confirm signing works.
+
 ## Tests
 
 Run every test after a change. A test script that crashes never calls `quit()` and hangs, so always wrap with a timeout:
