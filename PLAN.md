@@ -50,7 +50,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] TR/EN çeviri (CSV, sistem dili + level seçme ekranında dil butonu)
 
 ### Faz 3 — Android
-- [ ] JDK 17, Android SDK, Godot export templates
+- [x] JDK 17, Android SDK, Godot export templates (debug APK export çalışıyor)
 - [ ] Telefonda test, dokunmatik ayar, performans
 
 ### Faz 4 — Görsel ve ses
