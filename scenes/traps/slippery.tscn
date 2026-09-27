@@ -27,3 +27,35 @@ offset_right = 150.0
 offset_bottom = 6.0
 mouse_filter = 2
 color = Color(0.51, 0.83, 0.98, 1)
+
+[node name="Shine0" type="ColorRect" parent="Surface"]
+offset_left = 30.0
+offset_top = 2.0
+offset_right = 56.0
+offset_bottom = 4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="Shine1" type="ColorRect" parent="Surface"]
+offset_left = 110.0
+offset_top = 2.0
+offset_right = 136.0
+offset_bottom = 4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="Shine2" type="ColorRect" parent="Surface"]
+offset_left = 200.0
+offset_top = 2.0
+offset_right = 226.0
+offset_bottom = 4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)
+
+[node name="Shine3" type="ColorRect" parent="Surface"]
+offset_left = 260.0
+offset_top = 2.0
+offset_right = 286.0
+offset_bottom = 4.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.8)

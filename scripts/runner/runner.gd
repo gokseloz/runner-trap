@@ -4,6 +4,9 @@ extends CharacterBody2D
 
 signal hit(lives_left: int)
 signal knocked_out
+## For sound and effects.
+signal jumped
+signal slid
 
 const SIZE := Vector2(40, 64)
 const SLIDE_HEIGHT := 32.0
@@ -30,7 +33,7 @@ var _was_on_floor := true
 
 @onready var _collision: CollisionShape2D = $CollisionShape2D
 @onready var _visual: Node2D = $Visual
-@onready var _body: ColorRect = $Visual/Body
+@onready var _body: RunnerVisual = $Visual/Body
 @onready var _alert: Label = $Alert
 @onready var ai: RunnerAI = $AI
 
@@ -69,6 +72,8 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and not _was_on_floor and not is_down:
 		Fx.squash(_visual, Vector2(1.25, 0.8))
 	_was_on_floor = is_on_floor()
+	_body.airborne = not is_on_floor()
+	_body.running = velocity.x > 0.0
 
 
 func can_act() -> bool:
@@ -96,6 +101,7 @@ func jump() -> bool:
 		return false
 	_end_slide()
 	Fx.squash(_visual, Vector2(0.8, 1.2))
+	jumped.emit()
 	return true
 
 
@@ -104,6 +110,7 @@ func slide() -> bool:
 		return false
 	_slide_time_left = SLIDE_DURATION
 	_set_height(SLIDE_HEIGHT)
+	slid.emit()
 	return true
 
 
@@ -129,6 +136,7 @@ func take_hit() -> bool:
 	if lives <= 0:
 		is_down = true
 		set_alert(false)
+		_body.down = true
 		_fall_over()
 		knocked_out.emit()
 		return true
@@ -162,7 +170,7 @@ func _set_height(height: float) -> void:
 	var rect := _collision.shape as RectangleShape2D
 	rect.size = Vector2(SIZE.x, height)
 	_collision.position.y = -height / 2.0
-	_body.offset_top = -height
+	_body.height = height
 
 
 func _update_invulnerability(delta: float) -> void:

@@ -28,6 +28,10 @@ func _run() -> void:
 	_check(select.buttons.size() == 10, "10 level buttons")
 	_check(not select.buttons[0].disabled, "level 1 open on a fresh save")
 	_check(select.buttons[1].disabled, "level 2 locked on a fresh save")
+	select.sound_button.pressed.emit()
+	_check(not _game_state.sound_enabled and AudioServer.is_bus_mute(0), "sound button mutes")
+	select.sound_button.pressed.emit()
+	_check(_game_state.sound_enabled and not AudioServer.is_bus_mute(0), "sound button unmutes")
 	select.queue_free()
 
 	_game_state.set_level_stars("level_01", 2)

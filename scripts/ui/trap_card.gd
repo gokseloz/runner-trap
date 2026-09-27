@@ -29,11 +29,12 @@ func setup(scene: PackedScene) -> void:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(box)
 
-	var swatch := ColorRect.new()
-	swatch.color = trap_info.card_color
-	swatch.custom_minimum_size = Vector2(0, 36)
-	swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(swatch)
+	var icon := TrapIcon.new()
+	icon.trap_type = trap_info.trap_type
+	icon.color = trap_info.card_color
+	icon.custom_minimum_size = Vector2(0, 36)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(icon)
 
 	box.add_child(_make_label(tr(trap_info.display_name), 18))
 	box.add_child(_make_label(tr("Cost %d") % trap_info.energy_cost, 16))

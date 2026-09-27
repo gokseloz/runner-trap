@@ -26,6 +26,7 @@ var level_stars: Dictionary = {}
 var ads_removed := false
 ## Chosen locale, empty until the player picks one (then the system language is used).
 var language := ""
+var sound_enabled := true
 ## Tests turn this off so they don't touch the real save file.
 var persist := true
 
@@ -33,6 +34,7 @@ var persist := true
 func _ready() -> void:
 	load_game()
 	TranslationServer.set_locale(language if not language.is_empty() else _system_language())
+	_apply_sound()
 
 
 func get_current_level() -> LevelData:
@@ -72,6 +74,16 @@ func set_language(code: String) -> void:
 	save_game()
 
 
+func set_sound_enabled(enabled: bool) -> void:
+	sound_enabled = enabled
+	_apply_sound()
+	save_game()
+
+
+func _apply_sound() -> void:
+	AudioServer.set_bus_mute(0, not sound_enabled)
+
+
 ## OS locale reduced to a supported language code, e.g. "tr_TR" -> "tr".
 func _system_language() -> String:
 	var code := OS.get_locale_language()
@@ -100,6 +112,7 @@ func save_game() -> void:
 		cfg.set_value("stars", level_id, level_stars[level_id])
 	cfg.set_value("shop", "ads_removed", ads_removed)
 	cfg.set_value("settings", "language", language)
+	cfg.set_value("settings", "sound", sound_enabled)
 	cfg.save(SAVE_PATH)
 
 
@@ -112,3 +125,4 @@ func load_game() -> void:
 			level_stars[level_id] = cfg.get_value("stars", level_id, 0)
 	ads_removed = cfg.get_value("shop", "ads_removed", false)
 	language = cfg.get_value("settings", "language", "")
+	sound_enabled = cfg.get_value("settings", "sound", true)

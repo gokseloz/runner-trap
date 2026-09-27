@@ -20,9 +20,14 @@ const CAMERA_Y := 480.0
 const MIN_PLACE_AHEAD := 120.0
 const MIN_TRAP_GAP := 20.0
 
-const GROUND_COLOR := Color("37474f")
-const MARKER_COLOR := Color("546e7a")
-const FINISH_COLOR := Color("ffca28")
+const GROUND_COLOR := Color("6d4c41")
+const MARKER_COLOR := Color("8d6e63")
+const GRASS_COLOR := Color("7cb342")
+const GRASS_DEPTH := 10.0
+const FINISH_POLE_COLOR := Color("455a64")
+const FINISH_DARK := Color("263238")
+const FINISH_LIGHT := Color.WHITE
+const FINISH_CELL := 16.0
 const GHOST_VALID_COLOR := Color(0.3, 0.8, 0.4, 0.5)
 const GHOST_INVALID_COLOR := Color(0.9, 0.3, 0.3, 0.5)
 const GHOST_HEIGHT := 60.0
@@ -40,6 +45,7 @@ const SHAKE_DECAY := 60.0
 const KNOCKOUT_TIME_SCALE := 0.35
 const KNOCKOUT_SLOWMO_DURATION := 0.5
 const DUST_COLOR := Color("90a4ae")
+const END_JINGLE_DELAY := 0.5
 
 ## Leave empty to play GameState's current level.
 @export var level_data: LevelData
@@ -77,10 +83,13 @@ func _ready() -> void:
 	if level_data == null:
 		level_data = GameState.get_current_level()
 	_end_panel.hide()
+	for button: Button in [_levels_button, _retry_button, _next_button]:
+		button.pressed.connect(Audio.play.bind("click"))
 	_levels_button.pressed.connect(GameState.open_level_select)
 	_retry_button.pressed.connect(get_tree().reload_current_scene)
 	_next_button.pressed.connect(_go_to_next_level)
 
+	Backdrop.build_level(self, GROUND_Y)
 	_build_track()
 	_build_ghost()
 	_build_cards()
@@ -90,6 +99,8 @@ func _ready() -> void:
 	_runner.process_physics_priority = -1
 	_runner.hit.connect(_on_runner_hit)
 	_runner.knocked_out.connect(_on_runner_knocked_out)
+	_runner.jumped.connect(Audio.play.bind("jump", 0.08))
+	_runner.slid.connect(Audio.play.bind("slide", 0.08))
 	_runner.setup(level_data.runner)
 
 	energy = level_data.starting_energy
@@ -159,6 +170,7 @@ func place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	_track.add_child(trap)
 	Fx.pop_in(trap)
 	Fx.burst(_track, trap.position, DUST_COLOR, 10, 150.0)
+	Audio.play("drop", 0.1)
 	trap.runner_hit.connect(_on_trap_hit)
 	_placed_traps.append(trap)
 	_update_energy_ui()
@@ -203,6 +215,9 @@ func _end_game(player_won: bool) -> void:
 	_end_stars.filled = stars
 	_next_button.visible = player_won and GameState.has_next_level()
 	_end_panel.show()
+	# Let the knockout sound finish before the jingle.
+	var jingle := "win" if player_won else "lose"
+	get_tree().create_timer(END_JINGLE_DELAY, true, false, true).timeout.connect(Audio.play.bind(jingle))
 
 
 func _go_to_next_level() -> void:
@@ -243,14 +258,24 @@ func _build_track() -> void:
 	_track.add_child(ground)
 
 	_add_rect(Rect2(start_x, GROUND_Y, width, GROUND_DEPTH), GROUND_COLOR)
+	_add_rect(Rect2(start_x, GROUND_Y, width, GRASS_DEPTH), GRASS_COLOR)
 
 	# Distance markers so movement is visible on the flat ground.
 	var x := 0.0
 	while x < level_data.track_length:
-		_add_rect(Rect2(x, GROUND_Y + 10.0, 30.0, 6.0), MARKER_COLOR)
+		_add_rect(Rect2(x, GROUND_Y + 24.0, 30.0, 6.0), MARKER_COLOR)
 		x += MARKER_SPACING
 
-	_add_rect(Rect2(level_data.track_length, GROUND_Y - 200.0, 12.0, 200.0), FINISH_COLOR)
+	_build_finish_flag(level_data.track_length)
+
+
+## Pole with a checkered flag at the finish line.
+func _build_finish_flag(x: float) -> void:
+	_add_rect(Rect2(x, GROUND_Y - 200.0, 8.0, 200.0), FINISH_POLE_COLOR)
+	for row in 3:
+		for column in 4:
+			var color := FINISH_DARK if (row + column) % 2 == 0 else FINISH_LIGHT
+			_add_rect(Rect2(x + 8.0 + column * FINISH_CELL, GROUND_Y - 200.0 + row * FINISH_CELL, FINISH_CELL, FINISH_CELL), color)
 
 
 func _build_ghost() -> void:
@@ -307,6 +332,7 @@ func _on_trap_hit(_trap: Trap) -> void:
 	energy = minf(energy + COMBO_ENERGY_BONUS, level_data.max_energy)
 	_update_energy_ui()
 	_show_combo_popup()
+	Audio.play("combo")
 	combo_landed.emit(kind)
 
 
@@ -326,7 +352,9 @@ func _show_combo_popup() -> void:
 	tween.chain().tween_callback(label.queue_free)
 
 
-func _on_runner_hit(_lives_left: int) -> void:
+func _on_runner_hit(lives_left: int) -> void:
+	if lives_left > 0:
+		Audio.play("hit", 0.1)
 	_update_lives_label()
 	_shake = SHAKE_HIT
 	Fx.burst(_track, _runner.position + Vector2(0.0, -Runner.SIZE.y / 2.0), _runner.profile.color)
@@ -335,6 +363,7 @@ func _on_runner_hit(_lives_left: int) -> void:
 
 func _on_runner_knocked_out() -> void:
 	_shake = SHAKE_KNOCKOUT
+	Audio.play("knockout")
 	Fx.burst(_track, _runner.position + Vector2(0.0, -Runner.SIZE.y / 2.0), _runner.profile.color.darkened(0.3), 30, 380.0)
 	Input.vibrate_handheld(150)
 	Engine.time_scale = KNOCKOUT_TIME_SCALE
