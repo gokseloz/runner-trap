@@ -9,11 +9,13 @@ func _initialize() -> void:
 	# Autoloads aren't visible by name to -s scripts at compile time.
 	_game_state = root.get_node("GameState")
 	_game_state.persist = false
-	_game_state.level_stars = {}
 	_run()
 
 
 func _run() -> void:
+	# GameState loads the real save in _ready, which runs after _initialize.
+	await process_frame
+	_game_state.level_stars = {}
 	_check(_game_state.LEVELS.size() == 10, "10 levels listed")
 	var ids := {}
 	for i in _game_state.LEVELS.size():

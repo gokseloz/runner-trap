@@ -16,3 +16,4 @@ runner = ExtResource("2_runner")
 available_traps = Array[PackedScene]([ExtResource("3_pit"), ExtResource("4_wall"), ExtResource("5_saw"), ExtResource("6_slippery")])
 max_energy = 12.0
 starting_energy = 6.0
+energy_regen_per_sec = 1.1

@@ -8,5 +8,5 @@ display_name = "Jumper"
 run_speed = 270.0
 max_jumps = 2
 color = Color(0.49, 0.8, 0.35, 1)
-reaction_time = 0.6
-learning_rate = 0.06
+reaction_time = 0.65
+learning_rate = 0.05

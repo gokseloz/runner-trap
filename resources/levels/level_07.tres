@@ -14,3 +14,4 @@ track_length = 7000.0
 runner = ExtResource("2_runner")
 available_traps = Array[PackedScene]([ExtResource("3_pit"), ExtResource("4_wall"), ExtResource("5_saw")])
 
+energy_regen_per_sec = 1.0

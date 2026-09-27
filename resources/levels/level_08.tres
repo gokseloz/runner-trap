@@ -14,4 +14,4 @@ display_name = "Level 8"
 track_length = 7500.0
 runner = ExtResource("2_runner")
 available_traps = Array[PackedScene]([ExtResource("3_pit"), ExtResource("4_wall"), ExtResource("5_saw"), ExtResource("6_slippery")])
-energy_regen_per_sec = 0.9
+energy_regen_per_sec = 0.8
