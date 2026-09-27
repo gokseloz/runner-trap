@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Ters Runner"
+config/name="Runner Trap"
 run/main_scene="res://scenes/level_select.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 

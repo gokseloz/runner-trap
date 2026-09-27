@@ -1,4 +1,4 @@
-# Ters Runner — Proje Planı
+# Runner Trap — Proje Planı
 
 ## Konsept
 Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı tuzak kartları atarak runner'ı bitiş çizgisine varmadan düşürmeye çalışıyor.
@@ -11,6 +11,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 | Kazanma | Can sistemi: runner'ın 3 canı var, bitişe varmadan 3 kez düşür |
 | Yıldız | Kalan enerji / süreye göre 1–3 yıldız |
 | Görsel stil | Minimal / flat (düz renkler, basit şekiller) |
+| İsim | Runner Trap (paket `com.goezkazanc.runnertrap`, ilk Play yüklemesinden sonra değişmez) |
 | Dil | TR + EN baştan (Godot çeviri sistemi) |
 | Para kazanma | AdMob ödüllü reklam + reklam kaldırma satın alımı + kozmetik |
 
@@ -65,5 +66,5 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [ ] Production yayını
 
 ## Açık konular
-- Oyunun adı ("Ters Runner" geçici isim)
+- ~~Oyunun adı~~ → **Runner Trap** (paket: `com.goezkazanc.runnertrap`)
 - 12 test kullanıcısı listesi
