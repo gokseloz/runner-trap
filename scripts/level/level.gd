@@ -46,6 +46,9 @@ const KNOCKOUT_TIME_SCALE := 0.35
 const KNOCKOUT_SLOWMO_DURATION := 0.5
 const DUST_COLOR := Color("90a4ae")
 const END_JINGLE_DELAY := 0.5
+## The ad continue button stands out from the plain end panel buttons.
+const CONTINUE_COLOR := Color("43a047")
+const CONTINUE_HOVER_COLOR := Color("4caf50")
 
 ## Leave empty to play GameState's current level.
 @export var level_data: LevelData
@@ -62,6 +65,8 @@ var _placed_traps: Array[Trap] = []
 var _dodged_traps: Dictionary = {}
 var _cards: Array[TrapCard] = []
 var _ghost: ColorRect
+## False on a run that was already continued after an ad.
+var _can_continue := true
 
 @onready var _track: Node2D = $Track
 @onready var _runner: Runner = $Runner
@@ -77,17 +82,25 @@ var _ghost: ColorRect
 @onready var _levels_button: Button = $HUD/EndPanel/Box/Buttons/Levels
 @onready var _retry_button: Button = $HUD/EndPanel/Box/Buttons/Retry
 @onready var _next_button: Button = $HUD/EndPanel/Box/Buttons/Next
+@onready var _continue_button: Button = $HUD/EndPanel/Box/Continue
 
 
 func _ready() -> void:
 	if level_data == null:
 		level_data = GameState.get_current_level()
 	_end_panel.hide()
-	for button: Button in [_levels_button, _retry_button, _next_button]:
+	for button: Button in [_levels_button, _retry_button, _next_button, _continue_button]:
 		button.pressed.connect(Audio.play.bind("click"))
 	_levels_button.pressed.connect(GameState.open_level_select)
 	_retry_button.pressed.connect(get_tree().reload_current_scene)
 	_next_button.pressed.connect(_go_to_next_level)
+	_continue_button.pressed.connect(Ads.show_rewarded.bind(_continue_after_ad))
+	for state: String in ["normal", "hover", "pressed"]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = CONTINUE_HOVER_COLOR if state == "hover" else CONTINUE_COLOR
+		style.set_corner_radius_all(8)
+		_continue_button.add_theme_stylebox_override(state, style)
+	_continue_button.text = tr("Retry: runner -1 life") if GameState.ads_removed else tr("Watch ad: runner -1 life")
 
 	Backdrop.build_level(self, GROUND_Y)
 	_build_track()
@@ -101,7 +114,9 @@ func _ready() -> void:
 	_runner.knocked_out.connect(_on_runner_knocked_out)
 	_runner.jumped.connect(Audio.play.bind("jump", 0.08))
 	_runner.slid.connect(Audio.play.bind("slide", 0.08))
-	_runner.setup(level_data.runner)
+	_can_continue = not GameState.continue_run
+	_runner.setup(level_data.runner, 0 if _can_continue else 1)
+	GameState.continue_run = false
 
 	energy = level_data.starting_energy
 	_energy_bar.max_value = level_data.max_energy
@@ -214,10 +229,17 @@ func _end_game(player_won: bool) -> void:
 	_end_title.text = tr("Runner down!") if player_won else tr("Runner escaped!")
 	_end_stars.filled = stars
 	_next_button.visible = player_won and GameState.has_next_level()
+	_continue_button.visible = not player_won and _can_continue
 	_end_panel.show()
 	# Let the knockout sound finish before the jingle.
 	var jingle := "win" if player_won else "lose"
 	get_tree().create_timer(END_JINGLE_DELAY, true, false, true).timeout.connect(Audio.play.bind(jingle))
+
+
+## Rewarded ad finished: replay the level with the runner one life down.
+func _continue_after_ad() -> void:
+	GameState.continue_run = true
+	get_tree().reload_current_scene()
 
 
 func _go_to_next_level() -> void:

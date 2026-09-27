@@ -44,9 +44,10 @@ func _ready() -> void:
 	set_physics_process(false)
 
 
-func setup(runner_profile: RunnerProfile) -> void:
+## lives_lost starts the runner already hurt (used when continuing after an ad).
+func setup(runner_profile: RunnerProfile, lives_lost := 0) -> void:
 	profile = runner_profile
-	lives = profile.lives
+	lives = maxi(profile.lives - lives_lost, 1)
 	_body.color = profile.color
 	_set_height(SIZE.y)
 	set_physics_process(true)

@@ -131,6 +131,12 @@ horizontal_alignment = 1
 layout_mode = 2
 script = ExtResource("5_stars")
 
+[node name="Continue" type="Button" parent="HUD/EndPanel/Box"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Watch ad: runner -1 life"
+
 [node name="Buttons" type="HBoxContainer" parent="HUD/EndPanel/Box"]
 layout_mode = 2
 theme_override_constants/separation = 16

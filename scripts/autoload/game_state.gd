@@ -27,6 +27,9 @@ var ads_removed := false
 ## Chosen locale, empty until the player picks one (then the system language is used).
 var language := ""
 var sound_enabled := true
+## Set before reloading a lost level after a rewarded ad: the runner starts with
+## one life less, and that run can't be continued again.
+var continue_run := false
 ## Tests turn this off so they don't touch the real save file.
 var persist := true
 
