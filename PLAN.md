@@ -55,8 +55,8 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Telefonda test (kablosuz ADB, Galaxy S25 Ultra): dokunmatik ve performans sorunsuz; bot simülasyonuyla 6–10 dengelendi
 
 ### Faz 4 — Görsel ve ses
-- [ ] Flat stil asset'ler, efektler (ekran sarsıntısı, partikül, düşme animasyonu)
-- [ ] Müzik ve efekt sesleri
+- [x] Flat stil görseller (kodla çizilen karakter, parallax arka plan, tuzak detayları, kart ikonları), efektler (sarsıntı, partikül, düşme, ağır çekim, titreşim)
+- [x] Müzik ve efekt sesleri (tools/make_sounds.gd ile sentezleniyor, ses aç/kapa butonu)
 
 ### Faz 5 — Yayın
 - [ ] Play Console hesabı (tek seferlik 25 $)
