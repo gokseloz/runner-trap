@@ -65,7 +65,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [ ] AdMob eklentisi + AB izin ekranı (UMP) + ayarlardan izni değiştirme
 - [x] Gizlilik politikası taslağı (docs/privacy-policy.md): web'de yayınlanmalı (Google Sites)
 - [x] Mağaza açıklaması TR/EN (docs/store-listing.md)
-- [ ] Mağaza görselleri: feature graphic 1024x500, ekran görüntüleri
+- [x] Mağaza görselleri: feature graphic 1024x500, ekran görüntüleri (`tools/capture_store.gd` → build/store/)
 - [ ] **Kapalı test: en az 12 test kullanıcısı, 14 gün kesintisiz** (kişisel hesaplar için zorunlu)
 - [ ] Production yayını
 

@@ -72,5 +72,7 @@ Runner'ı alt edebilir misin?
 | Asset | Size | Source |
 |---|---|---|
 | App icon | 512 x 512 PNG | `assets/icon/icon.png` |
-| Feature graphic | 1024 x 500 PNG/JPG | TODO |
-| Phone screenshots | 2 to 8, 16:9 landscape | TODO: captured from the game |
+| Feature graphic | 1024 x 500 PNG/JPG | `build/store/feature_graphic.png` |
+| Phone screenshots | 2 to 8, 16:9 landscape | `build/store/en_1..6.png`, `tr_1..6.png` (1920 x 1080) |
+
+Regenerate: `godot --path . --resolution 1920x1080 --fixed-fps 60 -s res://tools/capture_store.gd -- en` (or `tr`) writes to /tmp/runner-trap-store/; screenshots used are select, play_18, play_24, play_30, play_46, win.
