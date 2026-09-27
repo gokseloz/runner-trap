@@ -64,6 +64,7 @@ Runner'ı alt edebilir misin?
 |---|---|
 | Category | Game › Puzzle (alternative: Casual) |
 | Contains ads | Yes (AdMob rewarded ads) |
+| Privacy policy | https://sites.google.com/view/runnertrap-privacy/ana-sayfa (Google Sites, from `docs/privacy-policy.md`) |
 | Target audience | 13+ (not directed at children) |
 | Content rating | IARC questionnaire: no violence against people, no gambling, no user-generated content |
 
