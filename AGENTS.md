@@ -94,14 +94,13 @@ $ADB exec-out screencap -p > /tmp/shot.png
 - Closed-test testers: Google Group `runner-trap-testers@googlegroups.com` (anyone can join). Testers join https://groups.google.com/g/runner-trap-testers, then opt in at https://play.google.com/apps/testing/com.goezkazanc.runnertrap with the same Google account. Play requires **12 testers opted in for 14 days in a row** before production can be requested; currently 0.
 - App content forms done. Data safety: collects and shares approximate location, app interactions, crash logs, diagnostics, device IDs (all from AdMob), encrypted in transit, no account, no deletion request. Advertising ID: yes. Privacy policy: https://sites.google.com/view/runnertrap-privacy/ana-sayfa (source `docs/privacy-policy.md`, it promises UMP consent and a settings toggle, which exist).
 - Store listing en-US and tr-TR on Play; screenshots and feature graphic uploaded once from `build/store/` (not in git).
-- AdMob: app not yet linked to the Play listing (possible once the app is public); payment profile not filled in yet (owner's task). Rewarded ad verified on the phone with the test unit.
+- AdMob: app not yet linked to the Play listing (possible once the app is public); payment profile (AdSense Germany) and US tax form W-8BEN approved 2026-09-28 (0% withholding); a bank account is added once earnings reach the 70 EUR threshold. Rewarded ad verified on the phone with the test unit.
 
 ## Next steps
 
-1. Owner: AdMob payment profile.
-2. Get 12 testers through the 14-day closed test, then apply for production in Play Console.
-3. Game work from `PLAN.md` (monetization plan: remove-ads purchase and cosmetics; more runner types). Check `PLAN.md` "Açık konular".
-4. After going public: link AdMob to the Play app; optionally add DE/TR consent message languages in AdMob.
+1. Get 12 testers through the 14-day closed test, then apply for production in Play Console.
+2. Game work from `PLAN.md` (monetization plan: remove-ads purchase and cosmetics; more runner types). Check `PLAN.md` "Açık konular".
+3. After going public: link AdMob to the Play app; optionally add DE/TR consent message languages in AdMob.
 
 ## Keeping this file current
 

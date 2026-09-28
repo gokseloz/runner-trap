@@ -67,7 +67,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Play Console CLI (`gplay`) + tek komutla yayın (`tools/release.sh`), kod GitHub'da (private)
 - [x] Data safety + reklam kimliği formları AdMob'a göre güncellendi, mağaza sayfası TR/EN
 - [x] Kapalı teste versionCode 2 yüklendi, onaylandı (2026-09-28)
-- [ ] AdMob ödeme profili (sahibi yapacak)
+- [x] AdMob ödeme profili + ABD vergi formu W-8BEN (onaylandı, %0 stopaj, 2026-09-28)
 - [x] Upload key yedeği: şifreli `runner-trap-keys.dmg`, sahibinin kişisel Google Drive'ında (2026-09-28)
 - [x] Gizlilik politikası taslağı (docs/privacy-policy.md): web'de yayınlanmalı (Google Sites)
 - [x] Mağaza açıklaması TR/EN (docs/store-listing.md)
