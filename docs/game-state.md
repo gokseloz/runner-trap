@@ -1,16 +1,16 @@
 # Current Game State
 
-Last verified: 2026-09-28. This describes the local development build, not the currently published Play build.
+Last verified: 2026-09-28. This describes version 1.0.1/code 3, uploaded to closed testing and awaiting Google Play review. Version 1.0.0/code 2 remains published while review is pending.
 
 ## Start Here Next Session
 
 - Read [AGENTS.md](../AGENTS.md) for working rules, tooling, tests and release safeguards.
 - Use this document for the current playable content. Use [PLAN.md](../PLAN.md) for decisions, change history and future work.
 - The latest debug APK, including anger expressions, was installed on the owner's Galaxy S25 Ultra. The owner ended the development session after installation.
-- This session's gameplay changes have not been uploaded to Play. Last recorded closed-test release: version code 2 (1.0.0); production is empty. Confirm remote state before the next release.
-- Release preparation for 1.0.1 is authorized: commit/push the work and perform a signed dry run. Actual Play upload still requires separate approval. Check git status/history for the current commit and push state; preserve any remaining changes.
-- Preparation commit `833816b` was pushed to origin/main. `DRY_RUN=1 tools/release.sh 1.0.1 alpha` completed successfully on 2026-09-28: all eight gameplay tests passed and the signed version-code-3 AAB was built. No upload, release tag or release-version commit occurred; the preset was restored to 1.0.0/code 2.
-- `jarsigner -verify` reported `jar verified`; it also reported self-signed certificate, missing timestamp and JarInputStream archive-order warnings. The AAB's compiled level 7 resource is byte-identical to the verified debug APK. These are local checks, not proof of Play acceptance; actual upload remains pending approval.
+- The owner approved uploading 1.0.1/code 3 to alpha. Upload, edit validation and edit commit succeeded; Play reports `RELEASE_LIFECYCLE_STATE_IN_REVIEW`. Production is empty. Approval and tester availability have not yet been confirmed.
+- Preparation commit `833816b` was pushed to origin/main; both the signed dry run and the actual release build passed all eight gameplay tests. The release preset now remains at 1.0.1/code 3; the next upload must use code 4. Release tag: `v1.0.1-3`.
+- The first upload command rejected locale-keyed release notes before creating an edit. Notes were corrected to a `language`/`text` array and checked with gplay's own dry-run mode, then the existing code-3 AAB was uploaded successfully. Do not rerun the incrementing release script blindly after a failure.
+- `jarsigner -verify` reported `jar verified`; it also reported self-signed certificate, missing timestamp and JarInputStream archive-order warnings. The dry-run AAB's compiled level 7 resource was byte-identical to the verified debug APK. Google Play subsequently accepted the actual release bundle upload; review is still pending.
 - Do not add more features or upload merely because the session ended. Ask the owner what to do next; Play uploads require explicit approval.
 
 ## Level Contents

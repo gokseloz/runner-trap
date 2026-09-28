@@ -114,6 +114,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 ## Açık konular
 - [x] 1.0.1 hazırlığı: yayın test kapısı çıkış kodu ve hata satırlarını da denetliyor; belirsiz yüklemede sürüm kodu korunuyor. 10 izole yayın testi geçti; Türkçe/İngilizce sürüm notları güncellendi.
 - [x] 1.0.1 / kod 3 imzalı deneme derlemesi tamamlandı; sekiz oyun testi geçti. Hazırlık commit'i `833816b` GitHub'a gönderildi. AAB imzası doğrulandı; 7. bölüm verisi doğrulanmış APK ile aynı. Yerel sürüm ayarı 1.0.0 / kod 2'ye geri alındı; Play'e yükleme yapılmadı.
-- [ ] 1.0.1 gerçek kapalı test yüklemesi için ayrıca onay al.
+- [x] Kullanıcı onayıyla 1.0.1 / kod 3 kapalı teste yüklendi (2026-09-28). İlk deneme sürüm notlarının nesne biçimini reddetti; language/text listesine dönüştürülüp CLI dry-run kontrolünden sonra aynı kod 3 paketi başarıyla gönderildi. Play durumu incelemede; kod 2 hâlâ yayınlı. Sürüm etiketi: `v1.0.1-3`, sonraki kod 4.
+- [ ] 1.0.1 inceleme sonucunu ve kapalı test kullanıcılara açılmasını kontrol et.
 - ~~Oyunun adı~~ → **Runner Trap** (paket: `com.goezkazanc.runnertrap`)
 - 12 test kullanıcısı listesi

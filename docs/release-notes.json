@@ -1,4 +1,10 @@
-{
-  "en-US": "Optional challenges and medals in levels 1-6. Spring traps in levels 4 and 7, Magnet in level 5, and a seesaw in level 7. More expressive runners, including anger after hits. Improved close-trap reactions, level 8 balance, and small-screen level selection.",
-  "tr-TR": "1-6. bölümlere isteğe bağlı görevler ve madalyalar eklendi. 4 ve 7. bölümlerde Yay, 5. bölümde Mıknatıs, 7. bölümde tahterevalli var. Koşucuya darbe sonrası öfke dahil yeni ifadeler eklendi. Yakın tuzak tepkileri, 8. bölüm dengesi ve küçük ekranlarda bölüm seçimi iyileştirildi."
-}
+[
+  {
+    "language": "en-US",
+    "text": "Optional challenges and medals in levels 1-6. Spring traps in levels 4 and 7, Magnet in level 5, and a seesaw in level 7. More expressive runners, including anger after hits. Improved close-trap reactions, level 8 balance, and small-screen level selection."
+  },
+  {
+    "language": "tr-TR",
+    "text": "1-6. bölümlere isteğe bağlı görevler ve madalyalar eklendi. 4 ve 7. bölümlerde Yay, 5. bölümde Mıknatıs, 7. bölümde tahterevalli var. Koşucuya darbe sonrası öfke dahil yeni ifadeler eklendi. Yakın tuzak tepkileri, 8. bölüm dengesi ve küçük ekranlarda bölüm seçimi iyileştirildi."
+  }
+]
