@@ -2,7 +2,7 @@ extends SceneTree
 ## TR/EN coverage and switching: godot --headless -s res://tests/translation_test.gd
 
 const CSV_PATH := "res://locale/translations.csv"
-const TRAP_SCENES := ["pit", "wall", "saw", "slippery"]
+const TRAP_SCENES := ["pit", "wall", "saw", "slippery", "spring", "snap", "magnet"]
 
 var _game_state: Node
 var _failures := 0
@@ -23,6 +23,10 @@ func _run() -> void:
 
 	# Every name shown in the game must be in the table.
 	var names: Array[String] = ["Runner down!", "Runner escaped!", "Lives: %d", "Cost %d", "Retry", "Next", "Levels", "Locked", "Combo! +%d", "Sound On", "Sound Off", "Watch ad: runner -1 life", "Retry: runner -1 life", "Paused", "Resume", "Restart"]
+	names.append_array(["Efficient trapper", "Combo master", "One weapon", "Win with at most %d traps", "Win with at least %d combos", "Win using only one trap type", "Traps: %d/%d", "Combos: %d/%d", "Trap types: %d/1", "Optional: %s", "Challenge complete!", "Challenge not completed", "Challenge: fresh run required"])
+	names.append_array(["Spring master", "Win with at least %d spring combos", "Spring combos: %d/%d"])
+	names.append_array(["Magnet master", "Win with at least %d hits during a magnet pull", "Magnet hits: %d/%d"])
+	names.append_array(["Full arsenal", "Win using at least %d trap types", "Trap types: %d/%d"])
 	for trap_name in TRAP_SCENES:
 		var trap: Trap = load("res://scenes/traps/%s.tscn" % trap_name).instantiate()
 		names.append(trap.display_name)

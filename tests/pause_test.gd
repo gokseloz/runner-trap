@@ -19,14 +19,20 @@ func _run() -> void:
 	_check(not level._pause_menu.visible and level._pause_button.visible, "menu hidden, pause button shown")
 	_check(not quit_on_go_back, "back button handled by the level")
 
+	runner.take_hit()
+	var expression_time := runner._body._expression_time_left
+	var recent_hit_time := runner._body._recent_hit_time_left
 	level._pause_button.pressed.emit()
 	var x := runner.position.x
 	for i in 10:
 		await physics_frame
 	_check(paused and level._pause_menu.visible, "pause button pauses and shows menu")
 	_check(runner.position.x == x, "runner frozen while paused")
+	_check(runner._body._expression_time_left == expression_time, "damage expression frozen while paused")
+	_check(runner._body._recent_hit_time_left == recent_hit_time, "anger escalation window frozen while paused")
 
 	level._resume_button.pressed.emit()
+	runner._stun_time_left = 0.0
 	for i in 10:
 		await physics_frame
 	_check(not paused and not level._pause_menu.visible, "resume hides menu")
@@ -46,6 +52,7 @@ func _run() -> void:
 	_check(not paused and level != null and not level._game_over, "restart reloads unpaused")
 
 	runner = level.get_node("Runner")
+	_check(runner._body.anger_level == 0 and runner._body._recent_hit_time_left == 0.0, "restart clears anger history")
 	runner.position.x = level.level_data.track_length + 10.0
 	await physics_frame
 	await physics_frame

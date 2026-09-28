@@ -11,6 +11,9 @@ Pit,Pit,Çukur
 Wall,Wall,Duvar
 Saw,Saw,Testere
 Slippery,Slippery,Kaygan
+Spring,Spring,Yay
+Snap,Snap,Kapan
+Magnet,Magnet,Mıknatıs
 Basic Runner,Basic Runner,Acemi Runner
 Fast Runner,Fast Runner,Hızlı Runner
 Jumper,Jumper,Zıplayan Runner
@@ -34,3 +37,25 @@ Privacy,Privacy,Gizlilik
 Paused,Paused,Duraklatıldı
 Resume,Resume,Devam
 Restart,Restart,Yeniden başla
+Efficient trapper,Efficient trapper,Az tuzak
+Combo master,Combo master,Kombo ustası
+One weapon,One weapon,Tek silah
+Full arsenal,Full arsenal,Tam cephanelik
+Win using at least %d trap types,Win using at least %d trap types,En az %d farklı tuzak türü kullanarak kazan
+Trap types: %d/%d,Trap types: %d/%d,Tuzak türü: %d/%d
+Spring master,Spring master,Yay ustası
+Win with at least %d spring combos,Win with at least %d spring combos,En az %d yay kombosu yaparak kazan
+Spring combos: %d/%d,Spring combos: %d/%d,Yay kombosu: %d/%d
+Magnet master,Magnet master,Mıknatıs ustası
+Win with at least %d hits during a magnet pull,Win with at least %d hits during a magnet pull,Mıknatıs çekerken en az %d darbe vurarak kazan
+Magnet hits: %d/%d,Magnet hits: %d/%d,Mıknatıs darbesi: %d/%d
+Win with at most %d traps,Win with at most %d traps,En fazla %d tuzakla kazan
+Win with at least %d combos,Win with at least %d combos,En az %d kombo yaparak kazan
+Win using only one trap type,Win using only one trap type,Tek tuzak türüyle kazan
+Traps: %d/%d,Traps: %d/%d,Tuzak: %d/%d
+Combos: %d/%d,Combos: %d/%d,Kombo: %d/%d
+Trap types: %d/1,Trap types: %d/1,Tuzak türü: %d/1
+Optional: %s,Optional: %s,İsteğe bağlı: %s
+Challenge complete!,Challenge complete!,Görev tamamlandı!
+Challenge not completed,Challenge not completed,Görev tamamlanmadı
+Challenge: fresh run required,Challenge: fresh run required,Görev için normal tur gerekli

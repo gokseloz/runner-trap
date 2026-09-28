@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RunnerProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/runner_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+display_name = "Fast Runner"
+run_speed = 380.0
+color = Color(1, 0.6, 0.2, 1)
+vision_range = 700.0
+reaction_time = 0.08
+reaction_jitter = 0.02
+timing_error = 35.0
+mistake_chance = 0.12
+learning_rate = 0.08
+min_reaction_time = 0.06

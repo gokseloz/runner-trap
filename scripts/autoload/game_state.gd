@@ -23,6 +23,7 @@ const FALLBACK_LANGUAGE := "en"
 var current_level_index := 0
 ## level_id -> best star count (0-3)
 var level_stars: Dictionary = {}
+var challenge_badges: Dictionary = {}
 var ads_removed := false
 ## Chosen locale, empty until the player picks one (then the system language is used).
 var language := ""
@@ -107,25 +108,42 @@ func get_level_stars(level_id: String) -> int:
 	return level_stars.get(level_id, 0)
 
 
-func save_game() -> void:
+func has_challenge_badge(level_id: String) -> bool:
+	return challenge_badges.get(level_id, false)
+
+
+func award_challenge_badge(level_id: String) -> void:
+	if has_challenge_badge(level_id):
+		return
+	challenge_badges[level_id] = true
+	save_game()
+
+
+func save_game(save_path := SAVE_PATH) -> void:
 	if not persist:
 		return
 	var cfg := ConfigFile.new()
 	for level_id in level_stars:
 		cfg.set_value("stars", level_id, level_stars[level_id])
+	for level_id in challenge_badges:
+		cfg.set_value("challenges", level_id, challenge_badges[level_id])
 	cfg.set_value("shop", "ads_removed", ads_removed)
 	cfg.set_value("settings", "language", language)
 	cfg.set_value("settings", "sound", sound_enabled)
-	cfg.save(SAVE_PATH)
+	cfg.save(save_path)
 
 
-func load_game() -> void:
+func load_game(save_path := SAVE_PATH) -> void:
 	var cfg := ConfigFile.new()
-	if cfg.load(SAVE_PATH) != OK:
+	if cfg.load(save_path) != OK:
 		return
 	if cfg.has_section("stars"):
 		for level_id in cfg.get_section_keys("stars"):
 			level_stars[level_id] = cfg.get_value("stars", level_id, 0)
+	challenge_badges.clear()
+	if cfg.has_section("challenges"):
+		for level_id in cfg.get_section_keys("challenges"):
+			challenge_badges[level_id] = cfg.get_value("challenges", level_id, false)
 	ads_removed = cfg.get_value("shop", "ads_removed", false)
 	language = cfg.get_value("settings", "language", "")
 	sound_enabled = cfg.get_value("settings", "sound", true)

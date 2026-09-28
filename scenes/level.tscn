@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/level/level.gd" id="1_level"]
 [ext_resource type="PackedScene" path="res://scenes/runner.tscn" id="3_runner"]
 [ext_resource type="Script" path="res://scripts/ui/drop_zone.gd" id="4_drop"]
 [ext_resource type="Script" path="res://scripts/ui/star_row.gd" id="5_stars"]
+[ext_resource type="Script" path="res://scripts/ui/challenge_badge.gd" id="6_badge"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_energy_bg"]
 bg_color = Color(0.17, 0.22, 0.25, 1)
@@ -69,6 +70,28 @@ offset_bottom = 60.0
 theme_override_colors/font_color = Color(0.15, 0.2, 0.25, 1)
 theme_override_font_sizes/font_size = 28
 text = "Lives: 3"
+
+[node name="ChallengeLabel" type="Label" parent="HUD"]
+anchor_right = 1.0
+offset_left = 24.0
+offset_top = 72.0
+offset_right = -112.0
+offset_bottom = 104.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.15, 0.2, 0.25, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="ChallengeProgress" type="Label" parent="HUD"]
+anchor_right = 1.0
+offset_left = 24.0
+offset_top = 110.0
+offset_right = -112.0
+offset_bottom = 142.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.15, 0.2, 0.25, 1)
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
 
 [node name="BottomPanel" type="VBoxContainer" parent="HUD"]
 layout_mode = 3
@@ -137,6 +160,22 @@ horizontal_alignment = 1
 [node name="Stars" type="Control" parent="HUD/EndPanel/Box"]
 layout_mode = 2
 script = ExtResource("5_stars")
+
+[node name="Challenge" type="HBoxContainer" parent="HUD/EndPanel/Box"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Badge" type="Control" parent="HUD/EndPanel/Box/Challenge"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("6_badge")
+
+[node name="Text" type="Label" parent="HUD/EndPanel/Box/Challenge"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15, 0.2, 0.25, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
 
 [node name="Continue" type="Button" parent="HUD/EndPanel/Box"]
 custom_minimum_size = Vector2(0, 52)

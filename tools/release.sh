@@ -35,8 +35,18 @@ NAME="${1:-$(perl -0ne 'print $1 if /\[preset\.1\.options\].*?version\/name="([^
 TAG="v$NAME-$CODE"
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && { echo "Tag $TAG exists."; exit 1; }
 
-# Undo the version bump unless the upload goes through.
-trap 'git checkout -- "$PRESETS"' EXIT
+PRESETS_BACKUP=$(mktemp)
+cp "$PRESETS" "$PRESETS_BACKUP"
+RESTORE_PRESETS=1
+cleanup() {
+	if [ "$RESTORE_PRESETS" = 1 ]; then
+		cp "$PRESETS_BACKUP" "$PRESETS"
+	fi
+	rm -f "$PRESETS_BACKUP"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 CODE=$CODE NAME=$NAME perl -0pi -e '
 	s/(\[preset\.1\.options\].*?version\/code=)\d+/$1$ENV{CODE}/s;
 	s/(\[preset\.1\.options\].*?version\/name=")[^"]*/$1$ENV{NAME}/s;
@@ -44,11 +54,13 @@ CODE=$CODE NAME=$NAME perl -0pi -e '
 echo "Release $NAME (code $CODE) to $TRACK"
 
 echo "Running tests..."
-godot --headless --import >/dev/null 2>&1
+godot --headless --audio-driver Dummy --import >/dev/null 2>&1
 for test in tests/*_test.gd; do
-	out="$(perl -e 'alarm 120; exec @ARGV' godot --headless --fixed-fps 60 -s "res://$test" 2>&1 || true)"
-	if ! echo "$out" | grep -q 'DONE: 0 failure(s)'; then
-		echo "$out" | grep -E 'FAIL|ERROR' || echo "$out" | tail -20
+	test_exit=0
+	out="$(perl -e 'alarm 120; exec @ARGV' godot --headless --audio-driver Dummy --fixed-fps 60 -s "res://$test" 2>&1)" || test_exit=$?
+	errors="$(printf '%s\n' "$out" | grep -E '^(FAIL|SCRIPT ERROR:|Parse Error:|ERROR:)' | grep -Ev '^ERROR: [0-9]+ resources still in use at exit \(run with --verbose for details\)\.$' || true)"
+	if [ "$test_exit" -ne 0 ] || [ -n "$errors" ] || ! printf '%s\n' "$out" | grep -qx 'DONE: 0 failure(s)'; then
+		printf '%s\n' "$out"
 		echo "Test failed: $test"
 		exit 1
 	fi
@@ -69,8 +81,13 @@ if [ -z "$YES" ]; then
 	[ "$answer" = y ] || { echo "Cancelled."; exit 1; }
 fi
 
-gplay release --package "$PACKAGE" --track "$TRACK" --bundle "$BUNDLE" --release-notes "@$NOTES"
-trap - EXIT
+RESTORE_PRESETS=0
+if ! gplay release --package "$PACKAGE" --track "$TRACK" --bundle "$BUNDLE" --release-notes "@$NOTES"; then
+	echo "Upload failed or its result is uncertain. Keeping version code $CODE."
+	echo "Check Play Console before retrying: this code may already be consumed."
+	echo "No release commit, tag or push was performed."
+	exit 1
+fi
 
 git commit -q -m "chore: release $NAME ($CODE)" -- "$PRESETS"
 git tag "$TAG"

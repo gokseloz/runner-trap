@@ -73,6 +73,7 @@ func _test_landing_trap_mid_air(should_hit: bool) -> void:
 	_check((_runner.lives < lives_before) == should_hit, "%s (lives %d -> %d)" % [label, lives_before, _runner.lives])
 	if should_hit:
 		_check(not _combos.is_empty() and _combos.back() == "chain", "landing trap counts as chain combo (%s)" % [_combos])
+		_check(_runner._body.expression == RunnerVisual.Mood.SURPRISED, "chain combo replaces confident face with surprise")
 	await _recover()
 
 

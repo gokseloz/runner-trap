@@ -1,16 +1,19 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/level_data.gd" id="1_level"]
 [ext_resource type="Resource" path="res://resources/runners/fast_runner.tres" id="2_runner"]
 [ext_resource type="PackedScene" path="res://scenes/traps/pit.tscn" id="3_pit"]
 [ext_resource type="PackedScene" path="res://scenes/traps/saw.tscn" id="4_saw"]
 [ext_resource type="PackedScene" path="res://scenes/traps/slippery.tscn" id="5_slippery"]
+[ext_resource type="PackedScene" path="res://scenes/traps/magnet.tscn" id="6_magnet"]
 
 [resource]
 script = ExtResource("1_level")
+challenge = 5
+challenge_target = 1
 level_id = "level_05"
 display_name = "Level 5"
 track_length = 7000.0
 runner = ExtResource("2_runner")
-available_traps = Array[PackedScene]([ExtResource("3_pit"), ExtResource("4_saw"), ExtResource("5_slippery")])
+available_traps = Array[PackedScene]([ExtResource("3_pit"), ExtResource("4_saw"), ExtResource("5_slippery"), ExtResource("6_magnet")])
 

@@ -2,7 +2,7 @@ extends Node2D
 ## Runs a single level: builds the track, starts the runner, follows it with the camera,
 ## manages energy and turns dropped cards into traps.
 
-## kind is "chain" (hit right after a dodge) or "slippery" (hit on a slippery floor).
+## kind is "chain", "slippery", or "spring" (hit during flight or just after landing).
 signal combo_landed(kind: String)
 
 const GROUND_Y := 600.0
@@ -55,6 +55,10 @@ const CONTINUE_HOVER_COLOR := Color("4caf50")
 
 var energy := 0.0
 var combo_count := 0
+var spring_combo_count := 0
+var magnet_hit_count := 0
+var traps_used := 0
+var trap_types_used: Dictionary = {}
 
 var _game_over := false
 var _time := 0.0
@@ -88,12 +92,18 @@ var _can_continue := true
 @onready var _resume_button: Button = $HUD/PauseMenu/Panel/Box/Resume
 @onready var _restart_button: Button = $HUD/PauseMenu/Panel/Box/Restart
 @onready var _pause_levels_button: Button = $HUD/PauseMenu/Panel/Box/Levels
+@onready var _challenge_label: Label = $HUD/ChallengeLabel
+@onready var _challenge_progress: Label = $HUD/ChallengeProgress
+@onready var _end_challenge: HBoxContainer = $HUD/EndPanel/Box/Challenge
+@onready var _end_challenge_label: Label = $HUD/EndPanel/Box/Challenge/Text
+@onready var _end_challenge_badge: ChallengeBadge = $HUD/EndPanel/Box/Challenge/Badge
 
 
 func _ready() -> void:
 	if level_data == null:
 		level_data = GameState.get_current_level()
 	_end_panel.hide()
+	_end_challenge.hide()
 	_pause_menu.hide()
 	# Android back opens the pause menu instead of closing the app.
 	get_tree().quit_on_go_back = false
@@ -118,6 +128,12 @@ func _ready() -> void:
 
 	Backdrop.build_level(self, GROUND_Y)
 	_build_track()
+	for position_x in level_data.seesaw_positions:
+		var seesaw := Seesaw.new()
+		seesaw.name = "Seesaw"
+		seesaw.runner = _runner
+		seesaw.position = Vector2(position_x, GROUND_Y)
+		_track.add_child(seesaw)
 	_build_ghost()
 	_build_cards()
 
@@ -125,6 +141,7 @@ func _ready() -> void:
 	# Move the runner before the camera follows it each physics frame.
 	_runner.process_physics_priority = -1
 	_runner.hit.connect(_on_runner_hit)
+	_runner.magnet_hit.connect(_on_magnet_hit)
 	_runner.knocked_out.connect(_on_runner_knocked_out)
 	_runner.jumped.connect(Audio.play.bind("jump", 0.08))
 	_runner.slid.connect(Audio.play.bind("slide", 0.08))
@@ -143,6 +160,7 @@ func _ready() -> void:
 	_update_lives_label()
 	_update_energy_ui()
 	_update_camera()
+	_update_challenge_ui()
 
 
 func _exit_tree() -> void:
@@ -238,6 +256,9 @@ func place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	Audio.play("drop", 0.1)
 	trap.runner_hit.connect(_on_trap_hit)
 	_placed_traps.append(trap)
+	traps_used += 1
+	trap_types_used[trap.trap_type] = true
+	_update_challenge_ui()
 	_update_energy_ui()
 	return true
 
@@ -251,6 +272,9 @@ func _can_place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 		return false
 	if x + half_width > level_data.track_length:
 		return false
+	for position_x in level_data.seesaw_positions:
+		if absf(x - position_x) < half_width + Seesaw.FOOTPRINT / 2.0 + MIN_TRAP_GAP:
+			return false
 	for trap in _placed_traps:
 		if trap.is_surface != card.trap_info.is_surface:
 			continue
@@ -282,6 +306,7 @@ func _end_game(player_won: bool) -> void:
 	_next_button.visible = player_won and GameState.has_next_level()
 	_continue_button.visible = not player_won and _can_continue
 	_end_panel.show()
+	_finish_challenge.call_deferred(player_won)
 	# Let the knockout sound finish before the jingle.
 	var jingle := "win" if player_won else "lose"
 	get_tree().create_timer(END_JINGLE_DELAY, true, false, true).timeout.connect(Audio.play.bind(jingle))
@@ -296,6 +321,42 @@ func _continue_after_ad() -> void:
 func _go_to_next_level() -> void:
 	GameState.current_level_index += 1
 	get_tree().reload_current_scene()
+
+
+func _on_magnet_hit() -> void:
+	magnet_hit_count += 1
+	_update_challenge_ui()
+
+
+func _update_challenge_ui() -> void:
+	var has_challenge := level_data.challenge != LevelData.Challenge.NONE
+	_challenge_label.visible = has_challenge
+	_challenge_progress.visible = has_challenge
+	if not has_challenge:
+		return
+	_challenge_label.text = tr("Optional: %s") % level_data.get_challenge_description()
+	var progress := level_data.get_challenge_progress(traps_used, combo_count, trap_types_used.size(), spring_combo_count, magnet_hit_count)
+	if not _can_continue:
+		progress = tr("Challenge: fresh run required")
+	elif (level_data.challenge == LevelData.Challenge.MAX_TRAPS and traps_used > level_data.challenge_target) or (level_data.challenge == LevelData.Challenge.SINGLE_TYPE and trap_types_used.size() > 1):
+		progress += " - " + tr("Challenge not completed")
+	_challenge_progress.text = progress
+
+
+func _finish_challenge(player_won: bool) -> void:
+	if level_data.challenge == LevelData.Challenge.NONE:
+		return
+	var completed := level_data.is_challenge_completed(player_won, traps_used, combo_count, trap_types_used.size(), not _can_continue, spring_combo_count, magnet_hit_count)
+	if completed:
+		GameState.award_challenge_badge(level_data.level_id)
+	var result := tr("Challenge complete!") if completed else tr("Challenge not completed")
+	if not _can_continue:
+		result = tr("Challenge: fresh run required")
+	_end_challenge_badge.earned = GameState.has_challenge_badge(level_data.level_id)
+	_end_challenge_label.text = "%s\n%s" % [result, level_data.get_challenge_description()]
+	_end_challenge.show()
+	_challenge_label.hide()
+	_challenge_progress.hide()
 
 
 func _update_camera() -> void:
@@ -391,17 +452,24 @@ func _track_dodges() -> void:
 		if trap.position.x + trap.width / 2.0 < runner_back:
 			_dodged_traps[trap] = true
 			_last_dodge_time = _time
+			_runner.celebrate_dodge()
 
 
 func _on_trap_hit(_trap: Trap) -> void:
 	var kind := ""
-	if _runner.speed_multiplier > 1.0:
+	if _runner.is_spring_combo_active():
+		kind = "spring"
+		_runner.clear_spring_combo()
+	elif _runner.speed_multiplier > 1.0:
 		kind = "slippery"
 	elif _time - _last_dodge_time <= COMBO_WINDOW:
 		kind = "chain"
 	if kind.is_empty():
 		return
 	combo_count += 1
+	if kind == "spring":
+		spring_combo_count += 1
+	_update_challenge_ui()
 	energy = minf(energy + COMBO_ENERGY_BONUS, level_data.max_energy)
 	_update_energy_ui()
 	_show_combo_popup()

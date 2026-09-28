@@ -11,6 +11,7 @@ const TAKEOFF_STEP := 5.0
 const SIM_STEP := 1.0 / 60.0
 const HAZARD_MARGIN := 2.0
 const POST_LANDING_TIME := 0.15
+const ESCAPE_TIME := 0.18
 
 var enabled := true
 var rng := RandomNumberGenerator.new()
@@ -27,7 +28,7 @@ var _floor_y := 0.0
 
 
 func _physics_process(delta: float) -> void:
-	if not enabled or _runner.profile == null or _runner.is_down:
+	if not enabled or _runner.profile == null or _runner.is_down or _runner.is_magnet_pulled():
 		return
 	_time += delta
 	if _runner.is_on_floor():
@@ -52,6 +53,10 @@ func _spot_new_traps() -> void:
 		if trap.global_position.x - _runner.global_position.x > profile.vision_range:
 			continue
 		var reaction := maxf(get_reaction_time(trap.trap_type) + rng.randf_range(-profile.reaction_jitter, profile.reaction_jitter), 0.0)
+		if _runner.is_on_floor() and _runner.speed_multiplier <= 1.0 and trap.trap_type in ["pit", "wall", "saw"]:
+			var clearance := trap.global_position.x - _runner.global_position.x - trap.width / 2.0 - Runner.SIZE.x / 2.0
+			var reaction_budget := maxf(clearance / maxf(profile.run_speed, 1.0) - ESCAPE_TIME, 0.0)
+			reaction = minf(reaction, reaction_budget)
 		seen_counts[trap.trap_type] = seen_counts.get(trap.trap_type, 0) + 1
 		_plans[trap] = {
 			"ready_at": _time + reaction,

@@ -9,6 +9,8 @@
 [resource]
 script = ExtResource("1_level")
 level_id = "level_02"
+challenge = 2
+challenge_target = 2
 display_name = "Level 2"
 track_length = 6000.0
 runner = ExtResource("2_runner")

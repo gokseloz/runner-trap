@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/level_data.gd" id="1_level"]
-[ext_resource type="Resource" path="res://resources/runners/fast_runner.tres" id="2_runner"]
+[ext_resource type="Resource" path="res://resources/runners/fast_veteran_runner.tres" id="2_runner"]
 [ext_resource type="PackedScene" path="res://scenes/traps/pit.tscn" id="3_pit"]
 [ext_resource type="PackedScene" path="res://scenes/traps/wall.tscn" id="4_wall"]
 [ext_resource type="PackedScene" path="res://scenes/traps/saw.tscn" id="5_saw"]

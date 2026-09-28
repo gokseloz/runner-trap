@@ -9,6 +9,7 @@ Read this whole file before working. It is the handover document: the owner does
 - Anything the owner must do by hand (Play Console, AdMob, GCP, GitHub web UI): give exact click paths. Play Console's UI is in Turkish, so name buttons as they appear there (e.g. "Kaydet", "Yayınlama özeti", "İncelemeye gönder").
 - Ask before irreversible or outward-facing actions: Play uploads (a used version code can never be reused), force pushes, deleting things. Explain the consequence in plain words.
 - The owner tests on their phone and reports back with screenshots.
+- Run automated tests headlessly by default; do not open a live game window on the Mac for routine testing. If a rendered visual check is necessary, use `--audio-driver Dummy` so it is silent (owner preference, 2026-09-28).
 
 ## Hard rules
 
@@ -59,9 +60,13 @@ for t in tests/*_test.gd; do perl -e 'alarm 120; exec @ARGV' godot --headless --
 
 Each test prints `PASS`/`FAIL` lines and `DONE: N failure(s)`. Test scripts can't reference `class_name`s whose scripts use autoloads (e.g. `LevelSelect`); compare `scene_file_path` instead.
 
+When changing release automation, run `node --test tests/release_test.mjs` (Node.js 22 available on the owner's Mac). It uses temporary fixtures and fake git/Godot/gplay commands; it never signs or uploads. The release gate rejects nonzero test exits, missing success summaries, assertion failures and script/engine errors. Only the existing exact resource-cleanup error is tolerated.
+
 Balance: `perl -e 'alarm 600; exec @ARGV' godot --headless -s res://tests/balance_sim.gd -- runs=40 levels=6,7` prints bot win rates per level. Runner `reaction_time` matters most; energy regen barely changes the good bot.
 
 ## Testing on the phone
+
+After exporting the debug APK, run `perl -e 'alarm 120; exec @ARGV' godot --headless --audio-driver Dummy -s res://tools/check_seesaw_export.gd` before installation. It compares the actual packaged level 7 with the source. `seesaw_positions` must remain `Array[float]`: the previous `PackedFloat32Array` exported as an empty array even though source-based tests passed (2026-09-28).
 
 Phone: Samsung Galaxy S25 Ultra, wireless ADB only (the Mac has no USB).
 
@@ -85,6 +90,7 @@ $ADB exec-out screencap -p > /tmp/shot.png
 1. Update `docs/release-notes.json` (`en-US` and `tr-TR`, shown to testers).
 2. `tools/release.sh [version_name] [track]`, e.g. `tools/release.sh 1.0.1`. Default track `alpha` (the closed test). It checks the tree is clean and on `main`, bumps `version/code` of the "Android Release" preset (`[preset.1]` in `export_presets.cfg`), runs all tests, builds the signed AAB (`tools/export_release.sh`), asks for confirmation, uploads with `gplay release`, then commits, tags `v<name>-<code>` and pushes. On failure before the upload the bump is reverted. `DRY_RUN=1` stops after the build; `YES=1` skips the prompt.
 3. The owner can't answer the prompt through an agent's shell, so run it with `YES=1` only after the owner explicitly said to upload.
+	Once the upload command starts, the version bump is retained even if the command fails or is interrupted. The version code may already be consumed: inspect Play Console before retrying, and never blindly restore the previous code. Before upload (including dry runs), the preset is restored from a temporary backup on exit.
 4. Store listing texts: `docs/store-listing.md`. Change them on Play with `gplay edits create` → `gplay listings update --locale <en-US|tr-TR> ...` (sets all fields) → `gplay edits validate` → `gplay edits commit`.
 5. Legal forms (Data safety, Advertising ID, content rating, etc.) can't be changed through the API; the owner edits them in Play Console. If a change adds data collection (new SDK, analytics, IAP), the Data safety form must be updated before that build ships.
 
@@ -99,7 +105,7 @@ $ADB exec-out screencap -p > /tmp/shot.png
 ## Next steps
 
 1. Get 12 testers through the 14-day closed test, then apply for production in Play Console.
-2. Game work from `PLAN.md` (monetization plan: remove-ads purchase and cosmetics; more runner types). Check `PLAN.md` "Açık konular".
+2. Read `docs/game-state.md` for the current level inventory and session handover, then `PLAN.md` for pending work (monetization plan: remove-ads purchase and cosmetics; more runner types). Check `PLAN.md` "Açık konular".
 3. After going public: link AdMob to the Play app; optionally add DE/TR consent message languages in AdMob.
 
 ## Keeping this file current

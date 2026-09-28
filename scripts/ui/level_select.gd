@@ -24,6 +24,7 @@ func _ready() -> void:
 		var button := _make_button(i)
 		_grid.add_child(button)
 		buttons.append(button)
+	_fit_buttons.call_deferred()
 	# The button names the language it switches to, in that language.
 	var other := GameState.get_next_language()
 	_language_button.text = GameState.LANGUAGES[other]
@@ -32,6 +33,12 @@ func _ready() -> void:
 	_build_privacy_button()
 	for button: Button in buttons + [_language_button]:
 		button.pressed.connect(Audio.play.bind("click"))
+
+
+func _fit_buttons() -> void:
+	for button: Button in buttons:
+		var box := button.get_node("Content") as VBoxContainer
+		button.custom_minimum_size = BUTTON_SIZE.max(box.get_combined_minimum_size() + Vector2(16.0, 20.0))
 
 
 func _build_backdrop() -> void:
@@ -120,7 +127,12 @@ func _make_button(index: int) -> Button:
 	button.pressed.connect(GameState.play_level.bind(index))
 
 	var box := VBoxContainer.new()
+	box.name = "Content"
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = 8.0
+	box.offset_right = -8.0
+	box.offset_top = 10.0
+	box.offset_bottom = -10.0
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(box)
@@ -142,4 +154,18 @@ func _make_button(index: int) -> Button:
 	stars.filled = GameState.get_level_stars(level.level_id)
 	stars.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(stars)
+	if level.challenge != LevelData.Challenge.NONE:
+		var badge := ChallengeBadge.new()
+		badge.name = "ChallengeBadge"
+		badge.earned = GameState.has_challenge_badge(level.level_id)
+		badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		badge.position = Vector2(-42.0, 6.0)
+		button.add_child(badge)
+		var challenge_name := Label.new()
+		challenge_name.text = level.get_challenge_name()
+		challenge_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		challenge_name.add_theme_font_size_override("font_size", 16)
+		challenge_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(challenge_name)
+		button.tooltip_text = level.get_challenge_description()
 	return button

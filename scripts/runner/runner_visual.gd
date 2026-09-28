@@ -11,6 +11,14 @@ const STRIDE_SPEED := 10.0
 const EYE_COLOR := Color.WHITE
 const PUPIL_COLOR := Color("263238")
 
+enum Mood { NEUTRAL, CONFIDENT, FOCUSED, ANGRY, SURPRISED }
+
+var expression := Mood.NEUTRAL
+var anger_level := 0
+var _expression_time_left := 0.0
+var _pending_anger_duration := 0.0
+var _recent_hit_time_left := 0.0
+
 var color := Color.WHITE:
 	set(value):
 		color = value
@@ -37,11 +45,42 @@ func _init() -> void:
 
 
 func _process(delta: float) -> void:
+	_recent_hit_time_left = maxf(_recent_hit_time_left - delta, 0.0)
+	if _expression_time_left > 0.0:
+		_expression_time_left = maxf(_expression_time_left - delta, 0.0)
+		if _expression_time_left == 0.0:
+			if _pending_anger_duration > 0.0 and not down:
+				expression = Mood.ANGRY
+				_expression_time_left = _pending_anger_duration
+			else:
+				expression = Mood.NEUTRAL
+				anger_level = 0
+			_pending_anger_duration = 0.0
+		queue_redraw()
 	if running and not airborne and not down:
 		_phase = fmod(_phase + delta * STRIDE_SPEED, TAU)
 		queue_redraw()
 	elif airborne:
 		queue_redraw()
+
+
+func react_to_hit(surprise_duration: float) -> void:
+	if down:
+		return
+	anger_level = 2 if _recent_hit_time_left > 0.0 else 1
+	_recent_hit_time_left = 6.0
+	_pending_anger_duration = 3.0 if anger_level == 2 else 2.0
+	expression = Mood.SURPRISED
+	_expression_time_left = surprise_duration
+	queue_redraw()
+
+
+func react(next_expression: Mood, duration: float) -> void:
+	if down or (_expression_time_left > 0.0 and next_expression <= expression):
+		return
+	expression = next_expression
+	_expression_time_left = duration
+	queue_redraw()
 
 
 func _draw() -> void:
@@ -52,6 +91,7 @@ func _draw() -> void:
 
 	if not sliding:
 		_draw_legs()
+		_draw_gesture()
 	draw_style_box(_style, body)
 
 	# Headband near the top.
@@ -66,8 +106,61 @@ func _draw() -> void:
 		draw_line(eye + Vector2(-s, -s), eye + Vector2(s, s), PUPIL_COLOR, 3.0)
 		draw_line(eye + Vector2(-s, s), eye + Vector2(s, -s), PUPIL_COLOR, 3.0)
 	else:
-		draw_circle(eye, 6.0, EYE_COLOR)
-		draw_circle(eye + Vector2(2.0, 0.0), 3.0, PUPIL_COLOR)
+		_draw_face(eye, sliding)
+
+
+func _draw_face(eye: Vector2, sliding: bool) -> void:
+	var mouth := eye + Vector2(-1.0, 12.0)
+	match expression:
+		Mood.CONFIDENT:
+			draw_arc(eye + Vector2(0.0, 2.0), 5.0, PI, TAU, 12, PUPIL_COLOR, 3.0, true)
+			if not sliding:
+				draw_arc(mouth + Vector2(-2.0, -3.0), 6.0, 0.1, PI - 0.1, 12, PUPIL_COLOR, 2.5, true)
+		Mood.FOCUSED:
+			draw_circle(eye, 6.0, EYE_COLOR)
+			draw_circle(eye + Vector2(3.0, 1.0), 2.5, PUPIL_COLOR)
+			draw_line(eye + Vector2(-6.0, -7.0), eye + Vector2(6.0, -3.0), PUPIL_COLOR, 3.0, true)
+			if not sliding:
+				draw_line(mouth + Vector2(-5.0, 0.0), mouth + Vector2(4.0, -1.0), PUPIL_COLOR, 2.5, true)
+		Mood.SURPRISED:
+			draw_circle(eye, 8.0, EYE_COLOR)
+			draw_circle(eye + Vector2(1.0, 0.0), 2.0, PUPIL_COLOR)
+			if not sliding:
+				draw_circle(mouth, 4.0, PUPIL_COLOR)
+		Mood.ANGRY:
+			draw_circle(eye, 6.0, EYE_COLOR)
+			draw_circle(eye + Vector2(3.0, 1.0), 2.5, PUPIL_COLOR)
+			draw_line(eye + Vector2(-7.0, -8.0), eye + Vector2(7.0, -2.0), PUPIL_COLOR, 4.0, true)
+			if not sliding:
+				if anger_level == 2:
+					draw_rect(Rect2(mouth + Vector2(-7.0, -2.0), Vector2(12.0, 7.0)), PUPIL_COLOR)
+					draw_rect(Rect2(mouth + Vector2(-5.0, 0.0), Vector2(8.0, 3.0)), EYE_COLOR)
+					draw_line(mouth + Vector2(-6.0, 1.0), mouth + Vector2(4.0, 1.0), PUPIL_COLOR, 1.5, true)
+				else:
+					draw_arc(mouth + Vector2(-2.0, 4.0), 5.0, PI + 0.2, TAU - 0.2, 12, PUPIL_COLOR, 2.5, true)
+			if anger_level == 2:
+				var mark := Vector2(-8.0, -height - 9.0)
+				draw_line(mark + Vector2(-6.0, -5.0), mark, Color("ff5252"), 3.0, true)
+				draw_line(mark, mark + Vector2(-6.0, 5.0), Color("ff5252"), 3.0, true)
+				draw_line(mark + Vector2(7.0, -5.0), mark + Vector2(2.0, 0.0), Color("ff5252"), 3.0, true)
+		_:
+			draw_circle(eye, 6.0, EYE_COLOR)
+			draw_circle(eye + Vector2(2.0, 0.0), 3.0, PUPIL_COLOR)
+
+
+func _draw_gesture() -> void:
+	if down or expression not in [Mood.CONFIDENT, Mood.ANGRY]:
+		return
+	var shoulder := Vector2(-WIDTH / 2.0 + 2.0, -height + 30.0)
+	var elbow := shoulder + Vector2(-10.0, -3.0)
+	var hand := elbow + Vector2(-3.0 + sin(_expression_time_left * 18.0) * 3.0, -14.0)
+	if expression == Mood.ANGRY:
+		elbow = shoulder + Vector2(-9.0, 9.0)
+		hand = elbow + Vector2(-2.0, -8.0 - sin(_expression_time_left * 22.0) * anger_level * 2.0)
+	var arm_color := color.darkened(0.25)
+	draw_line(shoulder, elbow, arm_color, 5.0, true)
+	draw_line(elbow, hand, arm_color, 5.0, true)
+	draw_circle(hand, 5.0 if expression == Mood.ANGRY else 4.0, color)
 
 
 func _draw_legs() -> void:
