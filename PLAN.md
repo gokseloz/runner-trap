@@ -66,7 +66,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Oyun içi duraklatma menüsü (devam, yeniden başla, level'lar; Android geri tuşu ve uygulamadan çıkınca otomatik duraklatma)
 - [x] Play Console CLI (`gplay`) + tek komutla yayın (`tools/release.sh`), kod GitHub'da (private)
 - [x] Data safety + reklam kimliği formları AdMob'a göre güncellendi, mağaza sayfası TR/EN
-- [x] Kapalı teste versionCode 2 yüklendi (incelemede, 2026-09-27)
+- [x] Kapalı teste versionCode 2 yüklendi, onaylandı (2026-09-28)
 - [ ] AdMob ödeme profili (sahibi yapacak)
 - [ ] Upload key yedeği (`~/Keys/runner-trap/`, şifreli DMG, sahibi yapacak)
 - [x] Gizlilik politikası taslağı (docs/privacy-policy.md): web'de yayınlanmalı (Google Sites)

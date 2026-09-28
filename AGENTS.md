@@ -88,9 +88,9 @@ $ADB exec-out screencap -p > /tmp/shot.png
 4. Store listing texts: `docs/store-listing.md`. Change them on Play with `gplay edits create` → `gplay listings update --locale <en-US|tr-TR> ...` (sets all fields) → `gplay edits validate` → `gplay edits commit`.
 5. Legal forms (Data safety, Advertising ID, content rating, etc.) can't be changed through the API; the owner edits them in Play Console. If a change adds data collection (new SDK, analytics, IAP), the Data safety form must be updated before that build ships.
 
-## Current state (2026-09-27)
+## Current state (2026-09-28)
 
-- Google Play: app created, personal developer account. Tracks: `alpha` (closed test, all countries) has version code 1 published and **version code 2 (1.0.0, AdMob + pause menu) in review**; `internal` has code 1; production empty. Next upload is version code 3.
+- Google Play: app created, personal developer account. Tracks: `alpha` (closed test, all countries) has **version code 2 (1.0.0, AdMob + pause menu) published** (approved 2026-09-28); `internal` has code 1; production empty. Next upload is version code 3.
 - Closed-test testers: Google Group `runner-trap-testers@googlegroups.com` (anyone can join). Testers join https://groups.google.com/g/runner-trap-testers, then opt in at https://play.google.com/apps/testing/com.goezkazanc.runnertrap with the same Google account. Play requires **12 testers opted in for 14 days in a row** before production can be requested; currently 0.
 - App content forms done. Data safety: collects and shares approximate location, app interactions, crash logs, diagnostics, device IDs (all from AdMob), encrypted in transit, no account, no deletion request. Advertising ID: yes. Privacy policy: https://sites.google.com/view/runnertrap-privacy/ana-sayfa (source `docs/privacy-policy.md`, it promises UMP consent and a settings toggle, which exist).
 - Store listing en-US and tr-TR on Play; screenshots and feature graphic uploaded once from `build/store/` (not in git).
