@@ -68,7 +68,7 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [x] Data safety + reklam kimliği formları AdMob'a göre güncellendi, mağaza sayfası TR/EN
 - [x] Kapalı teste versionCode 2 yüklendi, onaylandı (2026-09-28)
 - [ ] AdMob ödeme profili (sahibi yapacak)
-- [ ] Upload key yedeği (`~/Keys/runner-trap/`, şifreli DMG, sahibi yapacak)
+- [x] Upload key yedeği: şifreli `runner-trap-keys.dmg`, sahibinin kişisel Google Drive'ında (2026-09-28)
 - [x] Gizlilik politikası taslağı (docs/privacy-policy.md): web'de yayınlanmalı (Google Sites)
 - [x] Mağaza açıklaması TR/EN (docs/store-listing.md)
 - [x] Mağaza görselleri: feature graphic 1024x500, ekran görüntüleri (`tools/capture_store.gd` → build/store/)

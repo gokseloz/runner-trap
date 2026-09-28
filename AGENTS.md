@@ -44,7 +44,7 @@ The repo has no secrets, so a fresh clone can build debug APKs and run tests but
 
 1. Clone: `git clone git@github.com:gokseloz/runner-trap.git`. The owner must add the new machine's SSH public key (`~/.ssh/*.pub`, never the private key) in GitHub → Settings → SSH and GPG keys. Then set the repo-local identity (see Hard rules).
 2. Install: `brew install --cask godot`, `brew install openjdk@17`, `brew install --cask android-commandlinetools`, `brew install tamtom/tap/gplay`. Then `sdkmanager "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.1" "build-tools;36.1.0"` (what the current machine has) and install the Godot 4.7.2 export templates (Android).
-3. Keys: the owner restores `~/Keys/runner-trap/` (`upload.keystore`, `password.txt`, `play-api.json`) from their encrypted backup (`runner-trap-keys.dmg`). If the upload key is lost for good, Play Console → Test and release → App integrity → request an upload key reset; if `play-api.json` is lost, create a new key for the service account in Google Cloud Console (project `runner-trap`, IAM → Service accounts) and delete the old one.
+3. Keys: the owner restores `~/Keys/runner-trap/` (`upload.keystore`, `password.txt`, `play-api.json`) from their encrypted backup (`runner-trap-keys.dmg` in the owner's personal Google Drive; its password is in the owner's Google Password Manager). If the upload key is lost for good, Play Console → Test and release → App integrity → request an upload key reset; if `play-api.json` is lost, create a new key for the service account in Google Cloud Console (project `runner-trap`, IAM → Service accounts) and delete the old one.
 4. gplay auth: `GPLAY_NO_UPDATE=1 gplay auth login --service-account ~/Keys/runner-trap/play-api.json` (never `--local`, that writes config into the repo), then check with `GPLAY_NO_UPDATE=1 gplay tracks releases list --package com.goezkazanc.runnertrap --track alpha`.
 5. Run the tests, then `DRY_RUN=1 tools/release.sh` to confirm signing works.
 
@@ -98,11 +98,10 @@ $ADB exec-out screencap -p > /tmp/shot.png
 
 ## Next steps
 
-1. Owner: back up `~/Keys/runner-trap/` (encrypted DMG, USB + cloud). Losing the upload key blocks updates until Google resets it.
-2. Owner: AdMob payment profile.
-3. Get 12 testers through the 14-day closed test, then apply for production in Play Console.
-4. Game work from `PLAN.md` (monetization plan: remove-ads purchase and cosmetics; more runner types). Check `PLAN.md` "Açık konular".
-5. After going public: link AdMob to the Play app; optionally add DE/TR consent message languages in AdMob.
+1. Owner: AdMob payment profile.
+2. Get 12 testers through the 14-day closed test, then apply for production in Play Console.
+3. Game work from `PLAN.md` (monetization plan: remove-ads purchase and cosmetics; more runner types). Check `PLAN.md` "Açık konular".
+4. After going public: link AdMob to the Play app; optionally add DE/TR consent message languages in AdMob.
 
 ## Keeping this file current
 
