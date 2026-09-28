@@ -9,6 +9,8 @@ Last verified: 2026-09-28. This describes the local development build, not the c
 - The latest debug APK, including anger expressions, was installed on the owner's Galaxy S25 Ultra. The owner ended the development session after installation.
 - This session's gameplay changes have not been uploaded to Play. Last recorded closed-test release: version code 2 (1.0.0); production is empty. Confirm remote state before the next release.
 - Release preparation for 1.0.1 is authorized: commit/push the work and perform a signed dry run. Actual Play upload still requires separate approval. Check git status/history for the current commit and push state; preserve any remaining changes.
+- Preparation commit `833816b` was pushed to origin/main. `DRY_RUN=1 tools/release.sh 1.0.1 alpha` completed successfully on 2026-09-28: all eight gameplay tests passed and the signed version-code-3 AAB was built. No upload, release tag or release-version commit occurred; the preset was restored to 1.0.0/code 2.
+- `jarsigner -verify` reported `jar verified`; it also reported self-signed certificate, missing timestamp and JarInputStream archive-order warnings. The AAB's compiled level 7 resource is byte-identical to the verified debug APK. These are local checks, not proof of Play acceptance; actual upload remains pending approval.
 - Do not add more features or upload merely because the session ended. Ask the owner what to do next; Play uploads require explicit approval.
 
 ## Level Contents
