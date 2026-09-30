@@ -20,7 +20,7 @@ A 2D mobile game made with Godot 4. The runner never stops and dodges on its own
 
 Unreleased (2026-09-30): level 7 adds the optional Seesaw master challenge. Trigger at least one successful spring-to-seesaw launch, then win in a fresh run to earn its medal. Ordinary crossings and spring combos alone do not count; rewarded-ad retries remain ineligible. Level 8 adds Quick hunter: win at or before the halfway point in a fresh run. Live track progress marks a missed deadline without ending the level; the knockout position determines the medal. Speed, energy and star rules are unchanged. Levels 9-11 have no optional challenge.
 
-Status: closed testing on Google Play (Android). The design plan and progress are in [PLAN.md](PLAN.md) (Turkish).
+Status (2026-09-30): version 1.0.2/code 4, including the additions above, was uploaded to Google Play closed testing and is in review. Version 1.0.1/code 3 remains published. The design plan and progress are in [PLAN.md](PLAN.md) (Turkish).
 
 For the next development session, see [Current Game State](docs/game-state.md): level-by-level cards, challenges, tuning, phone feedback and unreleased work.
 

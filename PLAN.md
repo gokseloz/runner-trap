@@ -132,6 +132,9 @@ Tasarım ilkesi (kullanıcı onayı, 2026-09-30): sürpriz var, karşı hamle va
 - [x] 1.0.1 hazırlığı: yayın test kapısı çıkış kodu ve hata satırlarını da denetliyor; belirsiz yüklemede sürüm kodu korunuyor. 10 izole yayın testi geçti; Türkçe/İngilizce sürüm notları güncellendi.
 - [x] 1.0.1 / kod 3 imzalı deneme derlemesi tamamlandı; sekiz oyun testi geçti. Hazırlık commit'i `833816b` GitHub'a gönderildi. AAB imzası doğrulandı; 7. bölüm verisi doğrulanmış APK ile aynı. Yerel sürüm ayarı 1.0.0 / kod 2'ye geri alındı; Play'e yükleme yapılmadı.
 - [x] Kullanıcı onayıyla 1.0.1 / kod 3 kapalı teste yüklendi (2026-09-28). İlk deneme sürüm notlarının nesne biçimini reddetti; language/text listesine dönüştürülüp CLI dry-run kontrolünden sonra aynı kod 3 paketi başarıyla gönderildi. Play durumu incelemede; kod 2 hâlâ yayınlı. Sürüm etiketi: `v1.0.1-3`, sonraki kod 4.
-- [ ] 1.0.1 inceleme sonucunu ve kapalı test kullanıcılara açılmasını kontrol et.
+- [x] 1.0.1 / kod 3 Play durumunun yayınlandı olduğu doğrulandı (2026-09-30).
+- [x] Kullanıcı güncellenmiş şemsiyeyi kabul etti ve push/yükleme onayı verdi. Oyun değişiklikleri `4613449` ile GitHub'a gönderildi. 1.0.2 / kod 4 imzalı deneme ve gerçek yayın derlemelerinde sekiz oyun testi geçti; İngilizce/Türkçe notlar CLI dry-run ile doğrulandı (2026-09-30).
+- [x] 1.0.2 / kod 4 kapalı test kanalına yüklendi; Play düzenlemesi doğrulandı ve kaydedildi. Sürüm commit'i ve `v1.0.2-4` etiketi pushlandı. Play kod 4 için incelemede, kod 3 için yayınlandı durumunu döndürüyor. Sonraki yükleme kod 5 olmalı (2026-09-30).
+- [ ] 1.0.2 inceleme sonucunu ve kapalı test kullanıcılarına açılmasını kontrol et.
 - ~~Oyunun adı~~ → **Runner Trap** (paket: `com.goezkazanc.runnertrap`)
 - 12 test kullanıcısı listesi

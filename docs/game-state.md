@@ -1,21 +1,17 @@
 # Current Game State
 
-Last updated: 2026-09-30. This describes local development after version 1.0.1/code 3: 11 levels, including the unreleased level 7 and 8 challenges, level 9's fake finish, level 10's wall revenge and level 11's last-life umbrella. Play status was last checked on 2026-09-28: code 3 was in review and code 2 remained published; it has not been rechecked in this development session.
+Last updated: 2026-09-30. Version 1.0.2/code 4 contains 11 levels, including the level 7 and 8 challenges, level 9's fake finish, level 10's wall revenge and level 11's last-life umbrella. Uploaded with owner approval to alpha on 2026-09-30; Play confirms code 4 is in review while 1.0.1/code 3 remains published.
 
 ## Start Here Next Session
 
-- Unreleased addition (2026-09-30): level 7's Seesaw master challenge requires at least one successful spring-to-seesaw launch and a win in a fresh run. Live progress, an end result and a persistent medal use the existing challenge system. The debug APK was installed and the owner approved the phone trial. No release-version bump or Play upload was made for this change.
-- Unreleased addition (2026-09-30): level 8's Quick hunter challenge requires a fresh-run win at or before 50% of the track (x = 3750). Live track percentage shows when the deadline is missed without ending the level. Medal evaluation snapshots the knockout position; exact halfway is eligible, any distance beyond is not. The debug APK was installed and the owner approved the phone trial. No Play upload was made for this change.
 - Read [AGENTS.md](../AGENTS.md) for working rules, tooling, tests and release safeguards.
-- Unreleased trial (2026-09-30): level 9 offers Fake finish for 2 energy, once per run. A grounded, vulnerable runner celebrates for 1.8 seconds at 45% speed without dodging, then recovers with a 1.8-second 35% speed boost and anger. Damage cancels both phases. The owner approved the phone trial; no Play upload is authorized for this change.
-- Unreleased trial (2026-09-30): level 10 enables wall revenge. The first placed wall becomes a one-time tap duel when the grounded runner approaches. A successful tap returns the wall as a free falling attack; missing adds no penalty beyond losing the wall. The owner approved the phone trial.
-- Unreleased trial (2026-09-30): level 11 adds a last-life umbrella, enabled only by its new `last_life_umbrella` flag. It unlocks after level 10; existing level configurations, stars and saved progress remain unchanged. The owner reported wall collisions and requested permanent flight until saw contact. The revised version passed all eight gameplay tests and umbrella pixel checks at 960x432 and 1280x720. Actual APK checks for levels 7-11 passed, including the raised saw's blade/collision heights. It was installed and launched on the phone with progress preserved; approval of this revision is pending. No Play upload was made.
+- Version 1.0.2 includes the owner-approved level 7/8 challenges and level 9/10 surprises. Their rules are documented below.
+- Level 11 unlocks after level 10 and adds the last-life umbrella. Following phone feedback, it now clears walls at 84px, has no timeout and closes only through saw contact during play. The owner accepted the revision and authorized this release. Existing progress is preserved.
 - Use this document for the current playable content. Use [PLAN.md](../PLAN.md) for decisions, change history and future work.
-- The latest debug APK includes all 11 levels. It passed actual APK checks for levels 7-11, was installed with save preservation on the Galaxy S25 Ultra and launched successfully. The level 11 phone trial is pending; no Play upload was made.
-- The owner approved uploading 1.0.1/code 3 to alpha. Upload, edit validation and edit commit succeeded; Play reports `RELEASE_LIFECYCLE_STATE_IN_REVIEW`. Production is empty. Approval and tester availability have not yet been confirmed.
-- Preparation commit `833816b` was pushed to origin/main; both the signed dry run and the actual release build passed all eight gameplay tests. The release preset now remains at 1.0.1/code 3; the next upload must use code 4. Release tag: `v1.0.1-3`.
-- The first upload command rejected locale-keyed release notes before creating an edit. Notes were corrected to a `language`/`text` array and checked with gplay's own dry-run mode, then the existing code-3 AAB was uploaded successfully. Do not rerun the incrementing release script blindly after a failure.
-- `jarsigner -verify` reported `jar verified`; it also reported self-signed certificate, missing timestamp and JarInputStream archive-order warnings. The dry-run AAB's compiled level 7 resource was byte-identical to the verified debug APK. Google Play subsequently accepted the actual release bundle upload; review is still pending.
+- The latest debug APK includes all 11 levels, passed actual APK checks for levels 7-11 (including raised-saw blade/collision heights), and was installed and launched on the Galaxy S25 Ultra with progress preserved. Revised umbrella pixel checks passed at 960x432 and 1280x720.
+- The 1.0.2 signed dry run and actual release each passed all eight gameplay tests. English/Turkish release notes passed gplay's dry-run contract check. Upload, edit validation and edit commit succeeded; Play reports `RELEASE_LIFECYCLE_STATE_IN_REVIEW` for code 4 and `RELEASE_LIFECYCLE_STATE_PUBLISHED` for code 3. Tester availability of code 4 awaits review.
+- Gameplay commit `4613449` and release tag `v1.0.2-4` were pushed to origin/main. The release preset remains at 1.0.2/code 4; the next upload must use code 5.
+- Historical 1.0.1 upload lesson: locale-keyed release notes were rejected before upload. The required format is a `language`/`text` array. Never rerun the incrementing release script blindly after an uncertain upload.
 - Do not add more features or upload merely because the session ended. Ask the owner what to do next; Play uploads require explicit approval.
 
 ## Level Contents
@@ -83,7 +79,7 @@ Sources: [level resources](../resources/levels/), [LevelData defaults and challe
 
 - Approved during this session: original runner expressions; challenges in levels 1-6; Spring in level 4; Magnet in level 5; level 8 reaction tuning; seesaw visibility in level 7.
 - The owner approved the level 7 challenge and level 8's Quick hunter challenge on the phone on 2026-09-30.
-- The owner approved level 9's fake finish and level 10's wall revenge on the phone on 2026-09-30. Level 11's revised wall-clearing, no-timeout umbrella still needs phone confirmation and feedback on timing and difficulty.
+- The owner approved level 9's fake finish and level 10's wall revenge on the phone on 2026-09-30, then accepted level 11's wall-clearing, no-timeout revision and authorized the release. Broader timing and difficulty feedback remains useful during closed testing.
 - Anger was installed, passed automated tests and a 960x432 rendered check. The owner ended the session, but did not give separate detailed feedback on its phone readability.
 - The global close-trap change passed deterministic tests across all ten levels. Broad human difficulty remains a playtest concern.
 - "Jump now" sabotage and more environmental objects were ideas only. They are not implemented. Do not treat them as an approved next task.
@@ -92,7 +88,7 @@ Sources: [level resources](../resources/levels/), [LevelData defaults and challe
 
 Level 11 validation: all eight gameplay tests passed after the no-timeout/wall-clearance change, including wall/pit avoidance, ascent protection, flight beyond twice the former timeout, saw closure, landing counterattack, wall damage after closure, raised-saw damage on the ground, pause, final-level win/escape and ad replay. All 11 levels are covered by the closest-trap tests; unlock tests verify level 10 opens level 11. The initial trial passed silent umbrella pixel checks and direct menu/text-bounds checks in Turkish at 960x432 and 1280x720. A longer challenge screenshot run timed out before reaching its menu capture; the direct level-select render test replaced that visual check.
 
-Release safety: `node --test tests/release_test.mjs` covers ten isolated scenarios, including misleading test summaries, build failure, cancelled confirmation, dry runs, uncertain uploads and successful release bookkeeping. A failed or interrupted upload retains the bumped version; check Play Console before retrying. Updated English/Turkish notes for 1.0.1 are in [release-notes.json](release-notes.json).
+Release safety: `node --test tests/release_test.mjs` covers ten isolated scenarios, including misleading test summaries, build failure, cancelled confirmation, dry runs, uncertain uploads and successful release bookkeeping. A failed or interrupted upload retains the bumped version; check Play Console before retrying. Updated English/Turkish notes for 1.0.2 are in [release-notes.json](release-notes.json).
 
 Latest code validation: all eight test scripts reported `DONE: 0 failure(s)`. The anger render check confirmed the extra red mark appears only in the stronger reaction. Existing ObjectDB/resource cleanup warnings still occur at test exit; they were not fixed in this session.
 
