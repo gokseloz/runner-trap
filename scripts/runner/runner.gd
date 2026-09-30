@@ -17,10 +17,19 @@ const STOP_DURATION := 0.8
 const STUN_DURATION := 1.0
 const INVULNERABLE_DURATION := 1.5
 const HIT_FLASH_COLOR := Color("ff5252")
+const FAKE_FINISH_CELEBRATION := 1.8
+const FAKE_FINISH_BOOST := 1.8
+const FAKE_FINISH_SLOWDOWN := 0.45
+const FAKE_FINISH_SPEEDUP := 1.35
+const UMBRELLA_HEIGHT := 84.0
 
 var profile: RunnerProfile
 var lives := 0
 var is_down := false
+var umbrella_enabled := false
+var umbrella_used := false
+var _is_umbrella_open := false
+var _umbrella_ground_y := 0.0
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 ## Set by surface traps (e.g. slippery floor) while the runner is on them.
@@ -36,6 +45,8 @@ var _spring_airborne := false
 var _spring_landing_time := 0.0
 var _magnet_time_left := 0.0
 var _magnet_speed := 0.0
+var _celebration_time_left := 0.0
+var _fake_finish_boost_left := 0.0
 
 @onready var _collision: CollisionShape2D = $CollisionShape2D
 @onready var _visual: Node2D = $Visual
@@ -61,6 +72,7 @@ func setup(runner_profile: RunnerProfile, lives_lost := 0) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_update_fake_finish(delta)
 	_spring_landing_time = maxf(_spring_landing_time - delta, 0.0)
 	if is_on_floor():
 		_air_jumps_left = profile.max_jumps - 1
@@ -74,9 +86,10 @@ func _physics_process(delta: float) -> void:
 	_stop_time_left = maxf(_stop_time_left - delta, 0.0)
 	_stun_time_left = maxf(_stun_time_left - delta, 0.0)
 	_update_invulnerability(delta)
+	_update_umbrella()
 
 	var halted := is_down or _stop_time_left > 0.0 or _stun_time_left > 0.0
-	velocity.x = 0.0 if halted else profile.run_speed * speed_multiplier
+	velocity.x = 0.0 if halted else get_run_speed()
 	if is_magnet_pulled() and not halted:
 		velocity.x = -_magnet_speed
 	var impact_speed := velocity.y
@@ -97,7 +110,80 @@ func _physics_process(delta: float) -> void:
 
 
 func can_act() -> bool:
-	return not is_down and _stun_time_left <= 0.0 and not is_magnet_pulled()
+	return not is_down and _stun_time_left <= 0.0 and not is_magnet_pulled() and _celebration_time_left <= 0.0 and not is_umbrella_open()
+
+
+func is_umbrella_open() -> bool:
+	return _is_umbrella_open
+
+
+func close_umbrella() -> bool:
+	if not is_umbrella_open():
+		return false
+	_is_umbrella_open = false
+	_body.umbrella_open = false
+	_body.react(RunnerVisual.Mood.SURPRISED, 0.6)
+	velocity.y = maxf(velocity.y, 140.0)
+	return true
+
+
+func _update_umbrella() -> void:
+	if umbrella_enabled and not umbrella_used and lives == 1 and can_act() and is_on_floor() and _invulnerable_time_left <= 0.0:
+		umbrella_used = true
+		_is_umbrella_open = true
+		_umbrella_ground_y = position.y
+		_end_slide()
+		_stop_time_left = 0.0
+		_body.umbrella_open = true
+		set_alert(false)
+	if is_umbrella_open():
+		velocity.y = clampf((_umbrella_ground_y - UMBRELLA_HEIGHT - position.y) * 8.0, -420.0, 80.0)
+
+
+func is_celebrating() -> bool:
+	return _celebration_time_left > 0.0
+
+
+func throw_wall() -> bool:
+	if not can_act() or not is_on_floor() or _invulnerable_time_left > 0.0:
+		return false
+	_end_slide()
+	_stop_time_left = 0.3
+	_body.throw_time_left = 0.5
+	_body.react(RunnerVisual.Mood.ANGRY, 0.8)
+	set_alert(false)
+	return true
+
+
+func get_run_speed() -> float:
+	var speed := profile.run_speed * speed_multiplier
+	if is_celebrating():
+		return speed * FAKE_FINISH_SLOWDOWN
+	if _fake_finish_boost_left > 0.0:
+		return speed * FAKE_FINISH_SPEEDUP
+	return speed
+
+
+func celebrate_fake_finish() -> bool:
+	if not can_act() or not is_on_floor() or _invulnerable_time_left > 0.0 or _fake_finish_boost_left > 0.0:
+		return false
+	_end_slide()
+	_stop_time_left = 0.0
+	_celebration_time_left = FAKE_FINISH_CELEBRATION
+	_body.celebrating = true
+	set_alert(false)
+	return true
+
+
+func _update_fake_finish(delta: float) -> void:
+	if _celebration_time_left > 0.0:
+		_celebration_time_left = maxf(_celebration_time_left - delta, 0.0)
+		if _celebration_time_left == 0.0:
+			_body.celebrating = false
+			_fake_finish_boost_left = FAKE_FINISH_BOOST
+			_body.react(RunnerVisual.Mood.ANGRY, FAKE_FINISH_BOOST)
+	else:
+		_fake_finish_boost_left = maxf(_fake_finish_boost_left - delta, 0.0)
 
 
 func is_magnet_pulled() -> bool:
@@ -200,9 +286,13 @@ func _on_trap_spotted(trap: Trap, _reaction_time: float) -> void:
 
 ## Returns false if the hit was ignored (already down or invulnerable).
 func take_hit() -> bool:
-	if is_down or _invulnerable_time_left > 0.0:
+	if is_down or _invulnerable_time_left > 0.0 or is_umbrella_open():
 		return false
 	var was_magnet_pulled := is_magnet_pulled()
+	close_umbrella()
+	_celebration_time_left = 0.0
+	_fake_finish_boost_left = 0.0
+	_body.celebrating = false
 	lives -= 1
 	_magnet_time_left = 0.0
 	if was_magnet_pulled:

@@ -90,7 +90,9 @@ func _run() -> void:
 	await _test_spring_challenge()
 	await _test_magnet_challenge()
 	await _test_arsenal_challenge()
-	await _start_level(6)
+	await _test_seesaw_challenge()
+	await _test_quick_hunter_challenge()
+	await _start_level(8)
 	_check(not _level._challenge_label.visible and not _level._challenge_progress.visible, "later levels hide challenge HUD")
 	_level._end_game(false)
 	await _settle()
@@ -107,7 +109,9 @@ func _run() -> void:
 	_check(select.buttons[3].get_node("ChallengeBadge").earned, "level 4 shows earned spring badge")
 	_check(select.buttons[4].get_node("ChallengeBadge").earned, "level 5 shows earned magnet badge")
 	_check(select.buttons[5].get_node("ChallengeBadge").earned, "level 6 shows earned arsenal badge")
-	_check(not select.buttons[6].has_node("ChallengeBadge"), "no badge on level without challenge")
+	_check(select.buttons[6].get_node("ChallengeBadge").earned, "level 7 shows earned seesaw badge")
+	_check(select.buttons[7].get_node("ChallengeBadge").earned, "level 8 shows earned quick hunter badge")
+	_check(not select.buttons[8].has_node("ChallengeBadge"), "no badge on level without challenge")
 	for button: Button in select.buttons:
 		_check(root.get_visible_rect().encloses(button.get_global_rect()), "level button stays inside viewport")
 		for content: Control in button.get_node("Content").get_children():
@@ -245,6 +249,112 @@ func _test_arsenal_challenge() -> void:
 	_level._end_game(false)
 	await _settle()
 	_check(_game_state.has_challenge_badge("level_06"), "later loss preserves arsenal medal")
+
+
+func _test_seesaw_challenge() -> void:
+	await _start_level(6)
+	_check(_level._challenge_label.visible, "seesaw challenge HUD visible")
+	_check(_level._challenge_progress.text == tr("Seesaw launches: %d/%d") % [0, 1], "seesaw progress starts at zero")
+	_check(_place(3, 250.0), "place spring for non-seesaw run")
+	for trap_index in 3:
+		_check(_place(0, 1200.0 + trap_index * 140.0), "place damage traps beyond seesaw")
+	_runner._spring_landing_time = 0.25
+	_knock_out()
+	await _settle()
+	_check(_level.spring_combo_count > 0 and _level.seesaw_launch_count == 0, "spring combo alone is not a seesaw launch")
+	_check(not _game_state.has_challenge_badge("level_07"), "win without seesaw launch earns no medal")
+	_check(_game_state.get_level_stars("level_07") > 0 and _game_state.is_level_unlocked(7), "missing seesaw challenge still awards stars and next level")
+
+	await _start_level(6)
+	_check(_place(3, 250.0), "place spring for seesaw loss")
+	_level.get_node("Track/Seesaw").launched.emit()
+	_check(_level.seesaw_launch_count == 1, "seesaw event advances live counter")
+	_check(_level._challenge_progress.text == tr("Seesaw launches: %d/%d") % [1, 1], "seesaw HUD shows completed launch count")
+	_check(not _game_state.has_challenge_badge("level_07"), "launch does not award medal before win")
+	await _capture("seesaw_progress")
+	_level._end_game(false)
+	await _settle()
+	_check(not _game_state.has_challenge_badge("level_07"), "seesaw launch followed by loss earns no medal")
+	_level.get_node("Track/Seesaw").launched.emit()
+	_check(_level.seesaw_launch_count == 1, "late launch event after game over is ignored")
+
+	await _start_level(6, true)
+	_check(_place(0, 1200.0) and _place(0, 1340.0), "place traps for seesaw ad replay")
+	_level.get_node("Track/Seesaw").launched.emit()
+	_check(_level._challenge_progress.text == tr("Challenge: fresh run required"), "seesaw ad replay stays ineligible after launch")
+	_knock_out()
+	await _settle()
+	_check(not _game_state.has_challenge_badge("level_07"), "seesaw ad replay earns no medal")
+
+	await _start_level(6)
+	_check(_level.seesaw_launch_count == 0, "fresh run resets seesaw count")
+	_check(_place(3, 250.0), "place spring for winning seesaw run")
+	for trap_index in 3:
+		_check(_place(0, 1200.0 + trap_index * 140.0), "place traps for seesaw win")
+	_level.get_node("Track/Seesaw").launched.emit()
+	_knock_out()
+	await _settle()
+	_check(_game_state.has_challenge_badge("level_07") and _level._end_challenge_badge.earned, "seesaw launch and win award medal")
+	await _capture("seesaw_win")
+
+	await _start_level(6)
+	_level._end_game(false)
+	await _settle()
+	_check(_game_state.has_challenge_badge("level_07"), "later loss preserves seesaw medal")
+
+
+func _test_quick_hunter_challenge() -> void:
+	await _start_level(7)
+	_check(_level._challenge_label.visible, "quick hunter HUD visible")
+	_check(_place() and _place() and _place(), "place traps for late quick hunter win")
+	_runner.position.x = _level.level_data.track_length * 0.25
+	_level._physics_process(0.0)
+	_check(_level._challenge_progress.text == tr("Track: %d%% / %d%%") % [25, 50], "track progress updates without trap placement")
+	await _capture("quick_hunter_progress")
+	_runner.position.x = _level.level_data.track_length * 0.500001
+	_level._physics_process(0.0)
+	_check(_level._challenge_progress.text == (tr("Track: %d%% / %d%%") % [51, 50]) + " - " + tr("Challenge not completed"), "crossing halfway immediately shows missed challenge without rounding down")
+	_check(not _level._game_over, "crossing challenge deadline does not end the level")
+	await _capture("quick_hunter_missed")
+	_knock_out()
+	_runner.position.x = _level.level_data.track_length * 0.25
+	await _settle()
+	_check(not _game_state.has_challenge_badge("level_08"), "late win does not earn medal even if position later changes")
+	_check(_game_state.get_level_stars("level_08") == 2 and _game_state.is_level_unlocked(8), "late win retains normal stars and unlocks next level")
+
+	await _start_level(7)
+	_check(not _level._challenge_progress.text.contains(tr("Challenge not completed")), "new run resets deadline progress")
+	_check(_place(), "place trap before early loss")
+	_runner.position.x = _level.level_data.track_length * 0.25
+	_level._end_game(false)
+	await _settle()
+	_check(not _game_state.has_challenge_badge("level_08"), "loss before halfway earns no medal")
+
+	await _start_level(7, true)
+	_check(_place() and _place(), "place traps for early ad replay win")
+	_runner.position.x = _level.level_data.track_length * 0.25
+	_level._physics_process(0.0)
+	_check(_level._challenge_progress.text == tr("Challenge: fresh run required"), "track updates preserve ad replay ineligibility")
+	_knock_out()
+	await _settle()
+	_check(not _game_state.has_challenge_badge("level_08"), "early ad replay win earns no medal")
+
+	await _start_level(7)
+	_check(_place() and _place() and _place(), "place traps for halfway win")
+	_runner.position.x = _level.level_data.track_length * 0.5
+	_level._physics_process(0.0)
+	_check(_level._challenge_progress.text == tr("Track: %d%% / %d%%") % [50, 50], "exactly halfway remains eligible")
+	_knock_out()
+	_runner.position.x += 1.0
+	await _settle()
+	_check(_game_state.has_challenge_badge("level_08") and _level._end_challenge_badge.earned, "halfway knockout awards medal using knockout position")
+	_check(_game_state.get_level_stars("level_08") == 3, "halfway knockout retains three stars")
+	await _capture("quick_hunter_win")
+
+	await _start_level(7)
+	_level._end_game(false)
+	await _settle()
+	_check(_game_state.has_challenge_badge("level_08"), "later loss preserves quick hunter medal")
 
 
 func _start_level(index: int, continued := false) -> void:

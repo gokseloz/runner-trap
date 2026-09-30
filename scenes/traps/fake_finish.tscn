@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/traps/fake_finish.gd" id="1_finish"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_finish"]
+size = Vector2(100, 8)
+
+[node name="FakeFinish" type="Area2D"]
+script = ExtResource("1_finish")
+trap_type = "fake_finish"
+display_name = "Fake finish"
+energy_cost = 2.0
+counter_action = "none"
+width = 100.0
+card_color = Color(0.94, 0.33, 0.31, 1)
+once_per_run = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_finish")

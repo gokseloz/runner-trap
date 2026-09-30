@@ -10,6 +10,7 @@
 [resource]
 script = ExtResource("1_level")
 level_id = "level_10"
+wall_revenge = true
 display_name = "Level 10"
 track_length = 8000.0
 runner = ExtResource("2_runner")

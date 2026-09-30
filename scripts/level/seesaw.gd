@@ -1,6 +1,8 @@
 class_name Seesaw
 extends Node2D
 
+signal launched
+
 const WIDTH := 240.0
 const HEIGHT := 44.0
 const RAMP_WIDTH := 100.0
@@ -66,6 +68,7 @@ func _on_runner_landed(impact_speed: float, from_spring: bool) -> void:
 	activated = true
 	_recoil = -signf(offset.x) * 0.22
 	queue_redraw()
+	launched.emit()
 
 
 func _update_ramps() -> void:

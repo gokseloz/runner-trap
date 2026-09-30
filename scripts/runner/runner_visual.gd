@@ -18,6 +18,7 @@ var anger_level := 0
 var _expression_time_left := 0.0
 var _pending_anger_duration := 0.0
 var _recent_hit_time_left := 0.0
+var throw_time_left := 0.0
 
 var color := Color.WHITE:
 	set(value):
@@ -31,6 +32,14 @@ var height := 64.0:
 		queue_redraw()
 var running := false
 var airborne := false
+var umbrella_open := false:
+	set(value):
+		umbrella_open = value
+		queue_redraw()
+var celebrating := false:
+	set(value):
+		celebrating = value
+		queue_redraw()
 var down := false:
 	set(value):
 		down = value
@@ -45,6 +54,9 @@ func _init() -> void:
 
 
 func _process(delta: float) -> void:
+	if throw_time_left > 0.0:
+		throw_time_left = maxf(throw_time_left - delta, 0.0)
+		queue_redraw()
 	_recent_hit_time_left = maxf(_recent_hit_time_left - delta, 0.0)
 	if _expression_time_left > 0.0:
 		_expression_time_left = maxf(_expression_time_left - delta, 0.0)
@@ -92,6 +104,8 @@ func _draw() -> void:
 	if not sliding:
 		_draw_legs()
 		_draw_gesture()
+	if umbrella_open and not down:
+		_draw_umbrella()
 	draw_style_box(_style, body)
 
 	# Headband near the top.
@@ -109,9 +123,23 @@ func _draw() -> void:
 		_draw_face(eye, sliding)
 
 
+func _draw_umbrella() -> void:
+	var center := Vector2(4.0, -height - 22.0)
+	draw_line(center + Vector2(0.0, -42.0), Vector2(4.0, -height + 28.0), Color("455a64"), 4.0, true)
+	for panel in 2:
+		var points := PackedVector2Array([center])
+		for step in 17:
+			var angle := PI + panel * PI / 2.0 + step * PI / 32.0
+			points.append(center + Vector2(cos(angle) * 48.0, sin(angle) * 36.0))
+		draw_colored_polygon(points, Color("26a69a") if panel == 0 else Color("ffca28"))
+		draw_polyline(points, Color("455a64"), 2.0, true)
+	draw_line(Vector2(-16.0, -height + 26.0), Vector2(4.0, -height + 16.0), color.darkened(0.25), 5.0, true)
+	draw_circle(Vector2(4.0, -height + 16.0), 5.0, color)
+
+
 func _draw_face(eye: Vector2, sliding: bool) -> void:
 	var mouth := eye + Vector2(-1.0, 12.0)
-	match expression:
+	match Mood.CONFIDENT if celebrating else expression:
 		Mood.CONFIDENT:
 			draw_arc(eye + Vector2(0.0, 2.0), 5.0, PI, TAU, 12, PUPIL_COLOR, 3.0, true)
 			if not sliding:
@@ -149,6 +177,19 @@ func _draw_face(eye: Vector2, sliding: bool) -> void:
 
 
 func _draw_gesture() -> void:
+	if throw_time_left > 0.0 and not down:
+		var shoulder := Vector2(WIDTH / 2.0 - 2.0, -height + 30.0)
+		var hand := shoulder + Vector2(28.0, -24.0)
+		draw_line(shoulder, hand, color.darkened(0.25), 6.0, true)
+		draw_circle(hand, 5.0, color)
+		return
+	if celebrating and not down:
+		for side in [-1.0, 1.0]:
+			var shoulder := Vector2(side * (WIDTH / 2.0 - 2.0), -height + 30.0)
+			var hand := Vector2(side * (WIDTH / 2.0 + 14.0), -height - 8.0)
+			draw_line(shoulder, hand, color.darkened(0.25), 5.0, true)
+			draw_circle(hand, 4.0, color)
+		return
 	if down or expression not in [Mood.CONFIDENT, Mood.ANGRY]:
 		return
 	var shoulder := Vector2(-WIDTH / 2.0 + 2.0, -height + 30.0)

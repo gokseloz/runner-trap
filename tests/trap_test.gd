@@ -35,6 +35,22 @@ func _run() -> void:
 		TranslationServer.set_locale("tr")
 	_make_ai_deterministic()
 	await _wait(30)
+	if OS.get_cmdline_user_args().has("--umbrella-only"):
+		await _test_umbrella()
+		print("DONE: %d failure(s)" % _failures)
+		quit(1 if _failures > 0 else 0)
+		return
+	if OS.get_cmdline_user_args().has("--wall-revenge-only"):
+		await _test_wall_revenge_target()
+		await _test_wall_revenge()
+		print("DONE: %d failure(s)" % _failures)
+		quit(1 if _failures > 0 else 0)
+		return
+	if OS.get_cmdline_user_args().has("--fake-finish-only"):
+		await _test_fake_finish()
+		print("DONE: %d failure(s)" % _failures)
+		quit(1 if _failures > 0 else 0)
+		return
 	await _test_snap_timing()
 	await _test_spring_launch()
 	await _expect("Wall", 400.0, false, "AI jumps a far wall")
@@ -51,6 +67,10 @@ func _run() -> void:
 	await _test_magnet_trap()
 	await _test_nearest_traps()
 	await _test_seesaw()
+	await _test_fake_finish()
+	await _test_wall_revenge_target()
+	await _test_wall_revenge()
+	await _test_umbrella()
 	print("DONE: %d failure(s)" % _failures)
 	quit(1 if _failures > 0 else 0)
 
@@ -322,7 +342,7 @@ func _test_magnet_trap() -> void:
 
 
 func _test_nearest_traps() -> void:
-	for level_index in 10:
+	for level_index in root.get_node("GameState").LEVELS.size():
 		for trap_name: String in ["Pit", "Wall", "Saw"]:
 			await _start_trap_level(level_index)
 			for card: TrapCard in _level._cards:
@@ -353,6 +373,7 @@ func _test_seesaw() -> void:
 		await physics_frame
 	_check(_runner.position.x > seesaw.position.x + 180.0 and _runner.lives == 3, "runner crosses seesaw without damage or blocking")
 	_check(not seesaw.activated and _combos.is_empty(), "normal crossing neither launches nor awards a combo")
+	_check(_level.seesaw_launch_count == 0, "normal crossing does not advance seesaw challenge")
 
 	await _start_trap_level(6)
 	seesaw = _level.get_node("Track/Seesaw")
@@ -360,6 +381,7 @@ func _test_seesaw() -> void:
 	_check(_runner.jump(), "ordinary jump before seesaw")
 	await _wait(120)
 	_check(not seesaw.activated and _runner.lives == 3, "ordinary jump landing does not activate seesaw")
+	_check(_level.seesaw_launch_count == 0, "ordinary jump does not advance seesaw challenge")
 
 	await _start_trap_level(6)
 	seesaw = _level.get_node("Track/Seesaw")
@@ -371,12 +393,14 @@ func _test_seesaw() -> void:
 			break
 		await physics_frame
 	_check(seesaw.activated and _runner.velocity.y < -700.0, "spring landing on seesaw triggers stronger second launch")
+	_check(_level.seesaw_launch_count == 1, "real spring-to-seesaw launch advances challenge")
 	_check(_runner.lives == 3 and _combos.is_empty(), "seesaw launch is harmless and awards no free combo")
 	_check(_runner.get_air_jumps_left() == 1, "seesaw preserves jumper air jump")
 	await _capture_trap("seesaw-launch")
 	var launch_velocity := _runner.velocity
 	seesaw._on_runner_landed(650.0, true)
 	_check(_runner.velocity == launch_velocity, "spent seesaw cannot retrigger launch")
+	_check(_level.seesaw_launch_count == 1, "spent seesaw does not count twice")
 	_level.pause()
 	var paused_position := _runner.position
 	var paused_tilt: float = seesaw._beam.rotation
@@ -388,6 +412,7 @@ func _test_seesaw() -> void:
 	_check(_runner.is_on_floor() and _runner.lives == 3, "seesaw flight lands safely without looping")
 	await _start_trap_level(6)
 	_check(not _level.get_node("Track/Seesaw").activated, "new attempt resets seesaw")
+	_check(_level.seesaw_launch_count == 0, "new attempt resets seesaw challenge counter")
 
 
 func _start_trap_level(index := 3, with_snap := false, with_seesaw := true) -> void:
@@ -414,6 +439,325 @@ func _start_trap_level(index := 3, with_snap := false, with_seesaw := true) -> v
 	_check(_level._cards.size() == _level.level_data.available_traps.size(), "level offers its configured trap cards")
 
 
+func _test_fake_finish() -> void:
+	await _start_trap_level(8)
+	var lives_before := _runner.lives
+	_check(_place("Fake finish", 300.0), "place fake finish on level 9")
+	var finish: Trap = _level._placed_traps.back()
+	var card: TrapCard = _level._cards.back()
+	_check(is_equal_approx(_level.energy, _level.level_data.max_energy - 2.0), "fake finish costs two energy")
+	_check(card.exhausted and not card.affordable and card._cost_label.text == tr("Used"), "used fake finish card is disabled and labelled")
+	var energy_after: float = _level.energy
+	_check(not _place("Fake finish", 550.0), "second fake finish is rejected")
+	_check(_level.energy == energy_after and _level.traps_used == 1, "rejected fake finish does not spend energy or count")
+	await _wait(20)
+	await _capture_trap("fake-finish-ready")
+	for frame in 120:
+		if finish.consumed:
+			break
+		await physics_frame
+	_check(finish.consumed and _runner.is_celebrating(), "physical crossing triggers celebration")
+	_check(not _level._game_over and _runner.lives == lives_before and _combos.is_empty(), "fake finish neither ends level nor deals damage or combo")
+	await _wait(2)
+	_check(is_equal_approx(_runner.velocity.x, _runner.profile.run_speed * Runner.FAKE_FINISH_SLOWDOWN), "celebration slows physical movement")
+	await _capture_trap("fake-finish-celebration")
+	_level.pause()
+	var time_before := _runner._celebration_time_left
+	await _wait(10)
+	_check(_runner._celebration_time_left == time_before, "pause freezes fake finish celebration")
+	_level.resume()
+	for frame in 150:
+		if not _runner.is_celebrating():
+			break
+		await physics_frame
+	_check(_runner._fake_finish_boost_left > 0.0 and _runner.can_act(), "surviving deception restores dodging with boost")
+	_check(is_equal_approx(_runner.velocity.x, _runner.profile.run_speed * Runner.FAKE_FINISH_SPEEDUP), "deceived runner physically speeds up")
+	await _capture_trap("fake-finish-angry")
+	_level.pause()
+	time_before = _runner._fake_finish_boost_left
+	await _wait(10)
+	_check(_runner._fake_finish_boost_left == time_before, "pause freezes fake finish boost")
+	_level.resume()
+	await _wait(120)
+	_check(is_equal_approx(_runner.velocity.x, _runner.profile.run_speed), "speed returns to normal")
+	finish._on_body_entered(_runner)
+	_check(not _runner.is_celebrating(), "spent fake finish cannot retrigger")
+
+	await _start_trap_level(8)
+	_check(not _level._cards.back().exhausted and not _runner.is_celebrating(), "restart resets card and celebration")
+	_check(_place("Fake finish", 300.0), "fresh run allows fake finish again")
+	finish = _level._placed_traps.back()
+	for frame in 120:
+		if finish.consumed:
+			break
+		await physics_frame
+	await _wait(12)
+	_level.energy = _level.level_data.max_energy
+	_check(_place("Pit", 200.0), "place real pit during celebration")
+	for frame in 120:
+		if _runner.lives < lives_before:
+			break
+		await physics_frame
+	_check(_runner.lives == lives_before - 1, "celebrating runner hits follow-up pit with AI enabled")
+	_check(not _runner.is_celebrating() and not _runner._body.celebrating and _runner._fake_finish_boost_left == 0.0, "damage cancels celebration and pending boost")
+	await _wait(120)
+	_check(_runner._fake_finish_boost_left == 0.0, "cancelled celebration cannot start delayed boost")
+	_runner._invulnerable_time_left = 1.0
+	_check(not _runner.celebrate_fake_finish(), "invulnerable runner ignores fake finish")
+	_runner._invulnerable_time_left = 0.0
+	_check(_runner.jump(), "runner jumps for airborne fake finish check")
+	await _wait(2)
+	_check(not _runner.celebrate_fake_finish(), "airborne runner ignores fake finish")
+	await _wait(120)
+	_check(_runner.celebrate_fake_finish(), "grounded runner can start another isolated state test")
+	_runner._update_fake_finish(Runner.FAKE_FINISH_CELEBRATION)
+	_check(_runner.take_hit() and _runner._fake_finish_boost_left == 0.0, "hit during speed boost cancels boost")
+	_runner._invulnerable_time_left = 0.0
+	_runner._stun_time_left = 0.0
+	_check(_runner.celebrate_fake_finish(), "last-life runner celebrates")
+	_check(_runner.take_hit() and _runner.is_down and not _runner._body.celebrating, "knockout cancels celebration and raised arms")
+	_check(not _runner.celebrate_fake_finish(), "knocked-out runner cannot celebrate")
+
+
+func _test_umbrella() -> void:
+	await _start_trap_level(10)
+	_check(_runner.umbrella_enabled, "level 11 enables last-life umbrella")
+	_check(not _runner.is_umbrella_open(), "umbrella stays closed at full health")
+	_check(_runner.take_hit(), "first hit for umbrella trial")
+	await _wait(100)
+	_check(not _runner.is_umbrella_open() and not _runner.umbrella_used, "two lives do not trigger umbrella")
+	_check(_runner.take_hit() and _runner.lives == 1, "second hit leaves last life")
+	await _wait(30)
+	_check(not _runner.is_umbrella_open(), "umbrella waits for damage recovery")
+	await _wait(90)
+	_check(_runner.is_umbrella_open() and _runner.umbrella_used, "last-life runner opens umbrella once")
+	_check(not _runner.is_on_floor() and _runner.position.y < 570.0, "umbrella lifts runner above pits")
+	await _capture_trap("umbrella-open")
+	_check(not _runner.jump() and not _runner.slide(), "gliding cannot be overridden by evasion")
+	_level.energy = _level.level_data.max_energy
+	_check(_place("Pit", 170.0), "place pit under gliding runner")
+	await _wait(40)
+	_check(_runner.lives == 1 and _runner.is_umbrella_open(), "gliding runner crosses pit without losing last life")
+	_check(_place("Wall", 180.0), "place wall ahead of gliding runner")
+	await _wait(40)
+	_check(_runner.lives == 1 and _runner.is_umbrella_open() and _runner.position.y < 530.0, "gliding runner clears wall height without closing umbrella")
+	_check(_place("Saw", 200.0), "place saw to close umbrella")
+	var saw: Trap = _level._placed_traps.back()
+	for frame in 100:
+		if saw.consumed:
+			break
+		await physics_frame
+	_check(saw.consumed and not _runner.is_umbrella_open(), "physical saw contact closes umbrella")
+	_check(_runner.lives == 1 and not _level._game_over and _combos.is_empty(), "closing umbrella causes no damage or free combo")
+	saw._on_body_entered(_runner)
+	_check(_runner.lives == 1, "spent saw cannot also damage runner")
+	await _capture_trap("umbrella-closed")
+	await _wait(60)
+	_check(_runner.is_on_floor() and not _runner.is_umbrella_open(), "runner lands without reopening umbrella")
+	_runner.ai.enabled = false
+	_level.energy = _level.level_data.max_energy
+	_check(_place("Wall", 180.0), "place wall after umbrella closes")
+	await _wait(50)
+	_check(_runner.is_down and not _runner._body.umbrella_open, "wall can defeat runner after umbrella closes")
+
+	await _start_trap_level(10)
+	_check(not _runner.umbrella_used and not _runner.is_umbrella_open(), "restart resets umbrella")
+	_runner.lives = 1
+	await _wait(40)
+	_level.pause()
+	var position_before := _runner.position
+	await _wait(15)
+	_check(_runner.is_umbrella_open() and _runner.position == position_before and _runner._body.umbrella_open, "pause preserves umbrella and freezes movement")
+	_level.resume()
+	await _wait(420)
+	_check(_runner.is_umbrella_open() and _runner._body.umbrella_open and not _runner.is_on_floor(), "umbrella stays open beyond twice the old timeout")
+	_check(_runner.lives == 1 and not _level._game_over and _runner.umbrella_used, "uninterrupted gliding preserves last life")
+
+	await _start_trap_level(10)
+	_runner.lives = 1
+	await _wait(40)
+	_check(_place("Saw", 300.0), "place saw for umbrella counterattack")
+	saw = _level._placed_traps.back()
+	_check(_place("Pit", 450.0), "place pit after umbrella-closing saw")
+	for frame in 150:
+		if _runner.is_down:
+			break
+		await physics_frame
+	_check(saw.consumed and _runner.is_down and _level._game_over, "saw then landing pit defeats glider with AI enabled")
+	_check(_level._end_stars.filled > 0 and not _level._next_button.visible, "level 11 win grants stars and has no next button")
+	await _capture_trap("umbrella-counterattack")
+
+	await _start_trap_level(10)
+	_runner.lives = 1
+	await _wait(2)
+	_check(_runner.is_umbrella_open(), "umbrella opens before ascent completes")
+	_check(_place("Wall", 140.0), "place nearest wall during umbrella ascent")
+	await _wait(40)
+	_check(_runner.lives == 1 and _runner.is_umbrella_open(), "wall cannot break umbrella during ascent")
+	_check(not _runner.take_hit() and not _runner.is_down and _runner.is_umbrella_open(), "ordinary damage cannot close umbrella")
+
+	await _start_trap_level(10)
+	_runner.ai.enabled = false
+	await _expect("Saw", 200.0, true, "raised saw still damages grounded runner without umbrella")
+
+	root.get_node("GameState").continue_run = true
+	await _start_trap_level(10)
+	_check(_runner.lives == 2 and not _runner.umbrella_used, "ad replay starts with two lives and unused umbrella")
+	_check(_runner.take_hit(), "ad replay reaches last life")
+	await _wait(120)
+	_check(_runner.is_umbrella_open(), "ad replay can trigger its own umbrella")
+	_runner.position.x = _level.level_data.track_length + 10.0
+	await _wait(2)
+	_check(_level._game_over and not _runner.is_umbrella_open() and not _runner._body.umbrella_open, "real finish cancels umbrella and ends level")
+
+
+func _test_wall_revenge() -> void:
+	await _start_trap_level(9)
+	_level.set_physics_process(false)
+	_check(_place("Wall", 300.0), "place first wall for revenge")
+	var wall: Trap = _level._placed_traps.back()
+	var energy_after: float = _level.energy
+	_check(wall.consumed and _level._revenge_pending, "first wall is reserved from damage and AI")
+	for frame in 100:
+		_level._update_wall_revenge()
+		if _level._revenge_target.active:
+			break
+		await physics_frame
+	_check(_level._revenge_target.active and not wall.visible, "runner uproots first nearby wall")
+	_check(_runner.lives == 3 and not _level._game_over and _combos.is_empty(), "throw is harmless and awards no combo")
+	_check(_runner._body.throw_time_left > 0.0, "runner shows throwing gesture")
+	await _wait(30)
+	await _capture_trap("wall-revenge-airborne")
+	_level.pause()
+	var elapsed_before: float = _level._revenge_target.elapsed
+	await _wait(10)
+	_check(_level._revenge_target.elapsed == elapsed_before, "pause freezes thrown wall catch window")
+	_level.resume()
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = Vector2(20.0, 180.0)
+	root.push_input(touch, true)
+	await process_frame
+	_check(_level._revenge_target.active, "touch outside thrown wall does not catch it")
+	touch.pressed = false
+	root.push_input(touch, true)
+	touch.pressed = true
+	touch.position = _level._revenge_target.get_global_rect().get_center()
+	root.push_input(touch, true)
+	await process_frame
+	touch.pressed = false
+	root.push_input(touch, true)
+	_check(not _level._revenge_target.active and wall.visible and not wall.consumed, "viewport touch sends wall back into track")
+	_check(_level.energy == energy_after and _level.traps_used == 1, "returned wall costs no extra energy or placement")
+	await _wait(8)
+	_level.pause()
+	var return_position := wall.position
+	await _wait(10)
+	_check(wall.position == return_position, "pause freezes returning wall")
+	_level.resume()
+	await _capture_trap("wall-revenge-return")
+	await _wait(50)
+	_check(_runner.lives == 2, "returned falling wall physically hits runner")
+	_check(wall.consumed and _combos.is_empty(), "returned wall hits once without free combo")
+	_check(_place("Wall", 300.0), "later wall can be placed normally")
+	_check(not _level._placed_traps.back().consumed and not _level._revenge_pending, "second wall is ordinary")
+
+	await _start_trap_level(9)
+	_level.set_physics_process(false)
+	_check(not _level._revenge_used, "restart resets wall revenge opportunity")
+	_check(_place("Wall", 300.0), "new run offers revenge again")
+	wall = _level._placed_traps.back()
+	energy_after = _level.energy
+	for frame in 100:
+		_level._update_wall_revenge()
+		if _level._revenge_target.active:
+			break
+		await physics_frame
+	_level._revenge_target._process(_level._revenge_target.CATCH_DURATION)
+	_check(not _level._revenge_target.active and not wall.visible and wall.consumed, "missed wall disappears")
+	_check(_runner.lives == 3 and _level.energy == energy_after and _level.traps_used == 1, "missing adds no health or energy penalty")
+	_check(_place("Wall", 300.0) and not _level._revenge_pending, "missing cannot grant another revenge attempt")
+
+	await _start_trap_level(9)
+	_check(_place("Wall", 180.0), "place wall with normal level processing")
+	wall = _level._placed_traps.back()
+	for frame in 100:
+		if _level._revenge_target.active:
+			break
+		await physics_frame
+	_check(_level._revenge_target.active, "normal gameplay launches revenge without test driving")
+	_level._end_game(false)
+	_check(not _level._revenge_target.active and not _level._revenge_target.visible, "level end cancels catch target")
+	_level._return_revenge_wall()
+	_check(not wall.visible, "late return cannot attack after level end")
+
+	await _start_trap_level(9)
+	_check(_place("Wall", 180.0), "place wall before cancelled return")
+	wall = _level._placed_traps.back()
+	for frame in 100:
+		if _level._revenge_target.active:
+			break
+		await physics_frame
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = _level._revenge_target.get_global_rect().get_center()
+	root.push_input(click, true)
+	await process_frame
+	click.pressed = false
+	root.push_input(click, true)
+	_check(not _level._revenge_target.active and wall.visible, "mouse click also returns revenge wall")
+	_level._end_game(false)
+	return_position = wall.position
+	await _wait(50)
+	_check(wall.position == return_position and wall.consumed and _runner.lives == 3, "level end cancels return movement and damage")
+
+	root.get_node("GameState").continue_run = true
+	await _start_trap_level(9)
+	_check(_runner.lives == 2 and not _level._revenge_used and not _level._revenge_target.active, "ad replay starts a fresh revenge opportunity")
+
+
+func _test_wall_revenge_target() -> void:
+	var target = load("res://scripts/ui/wall_revenge.gd").new()
+	_level.get_node("HUD").add_child(target)
+	var returns: Array[bool] = []
+	var misses: Array[bool] = []
+	target.returned.connect(func(): returns.append(true))
+	target.missed.connect(func(): misses.append(true))
+	target.launch(Vector2(200.0, 350.0))
+	_check(target.active and target.visible, "revenge target opens catch window")
+	target._process(0.4)
+	_check(root.get_visible_rect().encloses(target.get_global_rect()), "revenge target stays inside viewport")
+	var touch := InputEventScreenTouch.new()
+	touch.pressed = true
+	touch.position = target.size / 2.0
+	target._gui_input(touch)
+	_check(returns.size() == 1 and not target.active and not target.visible, "touch returns wall once")
+	target._gui_input(touch)
+	_check(returns.size() == 1, "duplicate touch cannot return wall twice")
+	target.launch(Vector2(200.0, 350.0))
+	target._process(target.CATCH_DURATION)
+	_check(misses.size() == 1 and not target.active, "untouched revenge wall expires")
+	target._gui_input(touch)
+	_check(returns.size() == 1, "late touch cannot recover missed wall")
+	target.launch(Vector2(200.0, 350.0))
+	root.get_tree().paused = true
+	target._gui_input(touch)
+	_check(target.active and returns.size() == 1, "paused revenge target rejects touch")
+	root.get_tree().paused = false
+	var drag_card: TrapCard = _level._cards[0]
+	drag_card.force_drag(drag_card, Control.new())
+	_check(root.gui_is_dragging() and target.mouse_filter == Control.MOUSE_FILTER_IGNORE, "card drag passes through revenge target")
+	target._gui_input(touch)
+	_check(target.active and returns.size() == 1, "card drag cannot catch revenge wall")
+	root.gui_cancel_drag()
+	_check(target.mouse_filter == Control.MOUSE_FILTER_STOP, "target accepts touches again after card drag")
+	target.cancel()
+	_check(not target.active and returns.size() == 1 and misses.size() == 1, "cancel clears target without return or penalty")
+	target.queue_free()
+	await process_frame
+
+
 func _wait_for_spring(spring: Trap) -> void:
 	for frame in 180:
 		if spring.consumed:
@@ -429,6 +773,61 @@ func _capture_trap(label: String) -> void:
 	await RenderingServer.frame_post_draw
 	var image := root.get_texture().get_image()
 	_check(not image.is_empty(), "trap screenshot renders")
+	if label == "umbrella-open":
+		var screen_position: Vector2 = root.get_canvas_transform() * _runner.global_position
+		var canopy := Rect2(screen_position + Vector2(-46.0, -128.0), Vector2(102.0, 46.0))
+		_check(root.get_visible_rect().encloses(canopy), "umbrella canopy stays inside viewport")
+		var image_scale := Vector2(image.get_size()) / root.get_visible_rect().size
+		var top_left := canopy.position * image_scale
+		var bottom_right := canopy.end * image_scale
+		var teal_pixels := 0
+		var yellow_pixels := 0
+		for pixel_y in range(maxi(0, int(top_left.y)), mini(image.get_height(), int(bottom_right.y))):
+			for pixel_x in range(maxi(0, int(top_left.x)), mini(image.get_width(), int(bottom_right.x))):
+				var pixel := image.get_pixel(pixel_x, pixel_y)
+				if pixel.is_equal_approx(Color("26a69a")):
+					teal_pixels += 1
+				if pixel.is_equal_approx(Color("ffca28")):
+					yellow_pixels += 1
+		_check(teal_pixels > 100 and yellow_pixels > 100, "both umbrella canopy panels visibly render")
+	if label == "wall-revenge-airborne":
+		var target: Control = _level._revenge_target
+		var target_rect := target.get_global_rect()
+		_check(root.get_visible_rect().encloses(target_rect), "thrown wall target fits viewport")
+		_check(not target_rect.intersects(_level._card_bar.get_global_rect()), "thrown wall does not overlap cards")
+		_check(not target_rect.intersects(_level._pause_button.get_global_rect()), "thrown wall does not overlap pause")
+		var image_scale := Vector2(image.get_size()) / root.get_visible_rect().size
+		var top_left := target_rect.position * image_scale
+		var bottom_right := target_rect.end * image_scale
+		var brick_pixels := 0
+		var ring_pixels := 0
+		for pixel_y in range(maxi(0, int(top_left.y)), mini(image.get_height(), int(bottom_right.y))):
+			for pixel_x in range(maxi(0, int(top_left.x)), mini(image.get_width(), int(bottom_right.x))):
+				var pixel := image.get_pixel(pixel_x, pixel_y)
+				if pixel.is_equal_approx(Color("b76b50")):
+					brick_pixels += 1
+				if pixel.is_equal_approx(Color("ffca28")):
+					ring_pixels += 1
+		_check(brick_pixels > 100 and ring_pixels > 50, "revenge brick and countdown ring visibly render")
+	if label == "fake-finish-ready":
+		var finish: Trap = _level._placed_traps.back()
+		var screen_position: Vector2 = root.get_canvas_transform() * finish.global_position
+		var image_scale := Vector2(image.get_size()) / root.get_visible_rect().size
+		var top_left := (screen_position + Vector2(-50.0, -126.0)) * image_scale
+		var bottom_right := (screen_position + Vector2(50.0, -102.0)) * image_scale
+		var dark_pixels := 0
+		var light_pixels := 0
+		for pixel_y in range(maxi(0, int(top_left.y)), mini(image.get_height(), int(bottom_right.y))):
+			for pixel_x in range(maxi(0, int(top_left.x)), mini(image.get_width(), int(bottom_right.x))):
+				var pixel := image.get_pixel(pixel_x, pixel_y)
+				if pixel.is_equal_approx(Color("263238")):
+					dark_pixels += 1
+				if pixel.is_equal_approx(Color.WHITE):
+					light_pixels += 1
+		_check(dark_pixels > 100 and light_pixels > 100, "fake finish checkered banner visibly renders")
+		for card: TrapCard in _level._cards:
+			for text_label: Node in card.find_children("*", "Label", true, false):
+				_check(card.get_global_rect().encloses(text_label.get_global_rect()), "fake finish trial card text fits")
 	if label == "seesaw-start":
 		var seesaw = _level.get_node("Track/Seesaw")
 		var screen_position: Vector2 = root.get_canvas_transform() * seesaw.global_position

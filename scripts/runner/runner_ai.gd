@@ -28,7 +28,7 @@ var _floor_y := 0.0
 
 
 func _physics_process(delta: float) -> void:
-	if not enabled or _runner.profile == null or _runner.is_down or _runner.is_magnet_pulled():
+	if not enabled or _runner.profile == null or _runner.is_down or _runner.is_magnet_pulled() or _runner.is_celebrating() or _runner.is_umbrella_open():
 		return
 	_time += delta
 	if _runner.is_on_floor():
@@ -55,7 +55,7 @@ func _spot_new_traps() -> void:
 		var reaction := maxf(get_reaction_time(trap.trap_type) + rng.randf_range(-profile.reaction_jitter, profile.reaction_jitter), 0.0)
 		if _runner.is_on_floor() and _runner.speed_multiplier <= 1.0 and trap.trap_type in ["pit", "wall", "saw"]:
 			var clearance := trap.global_position.x - _runner.global_position.x - trap.width / 2.0 - Runner.SIZE.x / 2.0
-			var reaction_budget := maxf(clearance / maxf(profile.run_speed, 1.0) - ESCAPE_TIME, 0.0)
+			var reaction_budget := maxf(clearance / maxf(_runner.get_run_speed(), 1.0) - ESCAPE_TIME, 0.0)
 			reaction = minf(reaction, reaction_budget)
 		seen_counts[trap.trap_type] = seen_counts.get(trap.trap_type, 0) + 1
 		_plans[trap] = {
@@ -144,7 +144,7 @@ func _is_clean_path(start: Vector2, velocity_y: float) -> bool:
 		var plan: Dictionary = _plans[trap]
 		if is_instance_valid(trap) and not trap.consumed and not plan.ignored and _time >= plan.ready_at:
 			hazards.append(trap.get_hit_rect().grow(HAZARD_MARGIN))
-	var speed := _runner.profile.run_speed * _runner.speed_multiplier
+	var speed := _runner.get_run_speed()
 	var g := _runner.gravity
 	var drop := maxf(_floor_y - start.y, 0.0)
 	var air_time := (-velocity_y + sqrt(velocity_y * velocity_y + 2.0 * g * drop)) / g

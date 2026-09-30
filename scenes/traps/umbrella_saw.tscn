@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/traps/saw.tscn" id="1_saw"]
+
+[node name="Saw" instance=ExtResource("1_saw")]
+
+[node name="CollisionShape2D" parent="." index="0"]
+position = Vector2(0, -72)
+
+[node name="Pole" parent="." index="1"]
+offset_bottom = -72.0
+
+[node name="Blade" parent="." index="2"]
+position = Vector2(0, -72)

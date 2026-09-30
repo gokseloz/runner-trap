@@ -14,6 +14,8 @@ Slippery,Slippery,Kaygan
 Spring,Spring,Yay
 Snap,Snap,Kapan
 Magnet,Magnet,Mıknatıs
+Fake finish,Fake finish,Sahte bitiş
+Used,Used,Kullanıldı
 Basic Runner,Basic Runner,Acemi Runner
 Fast Runner,Fast Runner,Hızlı Runner
 Jumper,Jumper,Zıplayan Runner
@@ -28,6 +30,7 @@ Level 7,Level 7,Bölüm 7
 Level 8,Level 8,Bölüm 8
 Level 9,Level 9,Bölüm 9
 Level 10,Level 10,Bölüm 10
+Level 11,Level 11,Bölüm 11
 Combo! +%d,Combo! +%d,Kombo! +%d
 Sound On,Sound On,Ses Açık
 Sound Off,Sound Off,Ses Kapalı
@@ -49,6 +52,12 @@ Spring combos: %d/%d,Spring combos: %d/%d,Yay kombosu: %d/%d
 Magnet master,Magnet master,Mıknatıs ustası
 Win with at least %d hits during a magnet pull,Win with at least %d hits during a magnet pull,Mıknatıs çekerken en az %d darbe vurarak kazan
 Magnet hits: %d/%d,Magnet hits: %d/%d,Mıknatıs darbesi: %d/%d
+Seesaw master,Seesaw master,Tahterevalli ustası
+Win with at least %d spring-to-seesaw launches,Win with at least %d spring-to-seesaw launches,Yaydan tahterevalliye en az %d sıçrama yaparak kazan
+Seesaw launches: %d/%d,Seesaw launches: %d/%d,Tahterevalli: %d/%d
+Quick hunter,Quick hunter,Hızlı avcı
+Win within the first %d%% of the track,Win within the first %d%% of the track,Parkurun ilk %%%d'lik kısmında kazan
+Track: %d%% / %d%%,Track: %d%% / %d%%,Parkur: %%%d / %%%d
 Win with at most %d traps,Win with at most %d traps,En fazla %d tuzakla kazan
 Win with at least %d combos,Win with at least %d combos,En az %d kombo yaparak kazan
 Win using only one trap type,Win using only one trap type,Tek tuzak türüyle kazan

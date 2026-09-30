@@ -19,6 +19,13 @@ func _draw() -> void:
 	draw_rect(Rect2(0, ground_y, w, 3), GRASS)
 	var center_x := w / 2.0
 	match trap_type:
+		"fake_finish":
+			for side in [-1.0, 1.0]:
+				var pole_x: float = center_x + side * 24.0
+				draw_line(Vector2(pole_x, ground_y), Vector2(pole_x, 2.0), color, 3.0)
+			for row in 2:
+				for column in 6:
+					draw_rect(Rect2(center_x - 24.0 + column * 8.0, 2.0 + row * 7.0, 8.0, 7.0), Color.WHITE if (row + column) % 2 == 0 else Color("263238"))
 		"pit":
 			draw_rect(Rect2(center_x - w * 0.22, ground_y, w * 0.44, h - ground_y), color.darkened(0.4))
 		"wall":

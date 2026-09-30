@@ -19,6 +19,8 @@ const CAMERA_Y := 480.0
 ## Traps can't be dropped right under the runner's feet.
 const MIN_PLACE_AHEAD := 120.0
 const MIN_TRAP_GAP := 20.0
+const WALL_REVENGE_TARGET = preload("res://scripts/ui/wall_revenge.gd")
+const WALL_RETURN_DURATION := 0.55
 
 const GROUND_COLOR := Color("6d4c41")
 const MARKER_COLOR := Color("8d6e63")
@@ -57,6 +59,7 @@ var energy := 0.0
 var combo_count := 0
 var spring_combo_count := 0
 var magnet_hit_count := 0
+var seesaw_launch_count := 0
 var traps_used := 0
 var trap_types_used: Dictionary = {}
 
@@ -71,6 +74,11 @@ var _cards: Array[TrapCard] = []
 var _ghost: ColorRect
 ## False on a run that was already continued after an ad.
 var _can_continue := true
+var _revenge_used := false
+var _revenge_wall: Trap
+var _revenge_pending := false
+var _revenge_target: Control
+var _return_tween: Tween
 
 @onready var _track: Node2D = $Track
 @onready var _runner: Runner = $Runner
@@ -133,9 +141,15 @@ func _ready() -> void:
 		seesaw.name = "Seesaw"
 		seesaw.runner = _runner
 		seesaw.position = Vector2(position_x, GROUND_Y)
+		seesaw.launched.connect(_on_seesaw_launched)
 		_track.add_child(seesaw)
 	_build_ghost()
 	_build_cards()
+	if level_data.wall_revenge:
+		_revenge_target = WALL_REVENGE_TARGET.new()
+		_revenge_target.name = "WallRevenge"
+		$HUD.add_child(_revenge_target)
+		_revenge_target.returned.connect(_return_revenge_wall)
 
 	_runner.position = Vector2(RUNNER_START_X, GROUND_Y)
 	# Move the runner before the camera follows it each physics frame.
@@ -146,6 +160,7 @@ func _ready() -> void:
 	_runner.jumped.connect(Audio.play.bind("jump", 0.08))
 	_runner.slid.connect(Audio.play.bind("slide", 0.08))
 	_can_continue = not GameState.continue_run
+	_runner.umbrella_enabled = level_data.last_life_umbrella
 	_runner.setup(level_data.runner, 0 if _can_continue else 1)
 	GameState.continue_run = false
 
@@ -209,9 +224,12 @@ func _physics_process(delta: float) -> void:
 	if _game_over:
 		return
 	_time += delta
+	_update_wall_revenge()
 	_track_dodges()
 	energy = minf(energy + level_data.energy_regen_per_sec * delta, level_data.max_energy)
 	_update_energy_ui()
+	if level_data.challenge == LevelData.Challenge.MAX_TRACK_PROGRESS:
+		_update_challenge_ui()
 	if not _runner.is_down and _runner.position.x >= level_data.track_length:
 		_end_game(false)
 		_runner.set_physics_process(false)
@@ -258,13 +276,62 @@ func place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	_placed_traps.append(trap)
 	traps_used += 1
 	trap_types_used[trap.trap_type] = true
+	if level_data.wall_revenge and not _revenge_used and trap.trap_type == "wall":
+		_revenge_used = true
+		_revenge_pending = true
+		_revenge_wall = trap
+		trap.consumed = true
+		trap.set_deferred("monitoring", false)
 	_update_challenge_ui()
 	_update_energy_ui()
 	return true
 
 
+func _update_wall_revenge() -> void:
+	if not _revenge_pending or not is_instance_valid(_revenge_wall):
+		return
+	var distance := _revenge_wall.position.x - _runner.position.x
+	if distance < -Runner.SIZE.x:
+		_revenge_pending = false
+		_revenge_wall.consumed = false
+		_revenge_wall.set_deferred("monitoring", true)
+		return
+	if distance > 100.0 or not _runner.throw_wall():
+		return
+	_revenge_pending = false
+	_revenge_wall.hide()
+	Fx.burst(_track, _revenge_wall.position + Vector2(0.0, -35.0), DUST_COLOR, 12, 140.0)
+	var screen_position := get_viewport().get_canvas_transform() * (_runner.position + Vector2(30.0, -80.0))
+	_revenge_target.launch(screen_position)
+	Audio.play("drop", 0.1)
+
+
+func _return_revenge_wall() -> void:
+	if _game_over or get_tree().paused or not is_instance_valid(_revenge_wall):
+		return
+	var landing_x := minf(_runner.position.x + _runner.get_run_speed() * WALL_RETURN_DURATION, level_data.track_length - _revenge_wall.width / 2.0)
+	_revenge_wall.position = _screen_to_world(_revenge_target.position + _revenge_target.size / 2.0)
+	_revenge_wall.modulate = Color.WHITE
+	_revenge_wall.consumed = false
+	_revenge_wall.counter_action = "none"
+	_revenge_wall.set_deferred("monitoring", true)
+	_revenge_wall.show()
+	_return_tween = create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	_return_tween.tween_property(_revenge_wall, "position", Vector2(landing_x, GROUND_Y), WALL_RETURN_DURATION).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_return_tween.tween_callback(_land_revenge_wall)
+	Audio.play("click")
+
+
+func _land_revenge_wall() -> void:
+	_revenge_wall.counter_action = "jump"
+	Fx.burst(_track, _revenge_wall.position, DUST_COLOR, 12, 150.0)
+	Audio.play("drop", 0.1)
+
+
 func _can_place_card(card: TrapCard, screen_pos: Vector2) -> bool:
 	if _game_over or energy < card.trap_info.energy_cost:
+		return false
+	if card.trap_info.once_per_run and trap_types_used.has(card.trap_info.trap_type):
 		return false
 	var x := _screen_to_world(screen_pos).x
 	var half_width := card.trap_info.width / 2.0
@@ -289,6 +356,13 @@ func _screen_to_world(screen_pos: Vector2) -> Vector2:
 
 func _end_game(player_won: bool) -> void:
 	_game_over = true
+	_runner.close_umbrella()
+	if is_instance_valid(_revenge_target):
+		_revenge_target.cancel()
+	if _return_tween != null and _return_tween.is_running():
+		_return_tween.kill()
+		_revenge_wall.consumed = true
+		_revenge_wall.set_deferred("monitoring", false)
 	_runner.ai.enabled = false
 	_runner.set_alert(false)
 	_ghost.hide()
@@ -296,9 +370,9 @@ func _end_game(player_won: bool) -> void:
 		card.affordable = false
 
 	var stars := 0
+	var track_progress := clampf(_runner.position.x / level_data.track_length, 0.0, 1.0)
 	if player_won:
-		var remaining := clampf(1.0 - _runner.position.x / level_data.track_length, 0.0, 1.0)
-		stars = level_data.get_stars(remaining)
+		stars = level_data.get_stars(1.0 - track_progress)
 		GameState.set_level_stars(level_data.level_id, stars)
 	_end_title.text = tr("Runner down!") if player_won else tr("Runner escaped!")
 	_end_stars.filled = stars
@@ -306,7 +380,7 @@ func _end_game(player_won: bool) -> void:
 	_next_button.visible = player_won and GameState.has_next_level()
 	_continue_button.visible = not player_won and _can_continue
 	_end_panel.show()
-	_finish_challenge.call_deferred(player_won)
+	_finish_challenge.call_deferred(player_won, track_progress)
 	# Let the knockout sound finish before the jingle.
 	var jingle := "win" if player_won else "lose"
 	get_tree().create_timer(END_JINGLE_DELAY, true, false, true).timeout.connect(Audio.play.bind(jingle))
@@ -328,6 +402,13 @@ func _on_magnet_hit() -> void:
 	_update_challenge_ui()
 
 
+func _on_seesaw_launched() -> void:
+	if _game_over:
+		return
+	seesaw_launch_count += 1
+	_update_challenge_ui()
+
+
 func _update_challenge_ui() -> void:
 	var has_challenge := level_data.challenge != LevelData.Challenge.NONE
 	_challenge_label.visible = has_challenge
@@ -335,18 +416,21 @@ func _update_challenge_ui() -> void:
 	if not has_challenge:
 		return
 	_challenge_label.text = tr("Optional: %s") % level_data.get_challenge_description()
-	var progress := level_data.get_challenge_progress(traps_used, combo_count, trap_types_used.size(), spring_combo_count, magnet_hit_count)
+	var track_progress := clampf(_runner.position.x / level_data.track_length, 0.0, 1.0)
+	var progress := level_data.get_challenge_progress(traps_used, combo_count, trap_types_used.size(), spring_combo_count, magnet_hit_count, seesaw_launch_count, track_progress)
 	if not _can_continue:
 		progress = tr("Challenge: fresh run required")
 	elif (level_data.challenge == LevelData.Challenge.MAX_TRAPS and traps_used > level_data.challenge_target) or (level_data.challenge == LevelData.Challenge.SINGLE_TYPE and trap_types_used.size() > 1):
 		progress += " - " + tr("Challenge not completed")
+	elif level_data.challenge == LevelData.Challenge.MAX_TRACK_PROGRESS and track_progress * 100.0 > level_data.challenge_target:
+		progress += " - " + tr("Challenge not completed")
 	_challenge_progress.text = progress
 
 
-func _finish_challenge(player_won: bool) -> void:
+func _finish_challenge(player_won: bool, track_progress := 1.0) -> void:
 	if level_data.challenge == LevelData.Challenge.NONE:
 		return
-	var completed := level_data.is_challenge_completed(player_won, traps_used, combo_count, trap_types_used.size(), not _can_continue, spring_combo_count, magnet_hit_count)
+	var completed := level_data.is_challenge_completed(player_won, traps_used, combo_count, trap_types_used.size(), not _can_continue, spring_combo_count, magnet_hit_count, seesaw_launch_count, track_progress)
 	if completed:
 		GameState.award_challenge_badge(level_data.level_id)
 	var result := tr("Challenge complete!") if completed else tr("Challenge not completed")
@@ -375,7 +459,8 @@ func _update_energy_ui() -> void:
 	if _game_over:
 		return
 	for card in _cards:
-		card.affordable = energy >= card.trap_info.energy_cost
+		card.exhausted = card.trap_info.once_per_run and trap_types_used.has(card.trap_info.trap_type)
+		card.affordable = not card.exhausted and energy >= card.trap_info.energy_cost
 
 
 func _build_track() -> void:

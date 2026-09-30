@@ -5,6 +5,8 @@ Güncel bölüm içerikleri, mekanikler ve sonraki seans için durum özeti: [Cu
 ## Konsept
 Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı tuzak kartları atarak runner'ı bitiş çizgisine varmadan düşürmeye çalışıyor.
 
+Tasarım ilkesi (kullanıcı onayı, 2026-09-30): sürpriz var, karşı hamle var, haksız ceza yok. Sürprizleri seyrek ve bölüme özgü kullan; oyuncuya karşılık verme fırsatı bırak.
+
 ## Kararlar
 | Konu | Karar |
 |---|---|
@@ -112,6 +114,21 @@ Runner sonsuz koşuyor ve yapay zekayla kendini koruyor. Oyuncu gerçek zamanlı
 - [ ] Sonraki deney fikri: tek kartlık "şimdi zıpla" sabotajı kullanıcı tarafından beğenildi; henüz uygulanmadı.
 
 ## Açık konular
+- [x] 7. bölüme "Tahterevalli ustası" görevi eklendi (2026-09-30): yaydan tahterevalliye en az 1 başarılı yeniden fırlatma ve normal turda galibiyet. Canlı sayaç, sonuç ve kalıcı madalya mevcut görev sistemine bağlandı. Normal geçiş/yalnızca yay kombosu sayılmaz; reklamlı tekrar madalya vermez. Fizik ve enerji dengesi değişmedi; APK içindeki görev de doğrulandı. Henüz yayınlanmadı.
+- [x] 7. bölüm görevi telefona kuruldu ve kullanıcı tarafından onaylandı (2026-09-30).
+- [x] 8. bölüme "Hızlı avcı" görevi eklendi: parkurun ilk %50'sinde normal turda kazan. Tam yarı çizgisi sayılır; hemen sonrası sayılmaz. Canlı yüzde, kaçırılan hedef bildirimi ve kalıcı madalya mevcut sisteme bağlandı; son darbe konumu kaydediliyor. Hız, yapay zekâ, enerji ve yıldız kuralları değişmedi. Sekiz oyun testi ve APK görev kontrolü geçti; henüz yayınlanmadı.
+- [x] 8. bölüm "Hızlı avcı" görevi telefonda kullanıcı tarafından onaylandı (2026-09-30).
+- [x] 9. bölüme "Sahte bitiş" deneyi eklendi (2026-09-30): 2 enerji, tur başına tek yerleştirme. Koşucu kollarını kaldırıp 1,8 saniye %45 hızla kutlar ve kaçınmaz; kurtulursa 1,8 saniye %35 hızlanıp öfkelenir. Darbe etkiyi iptal eder; çizgi tek başına can götürmez veya bölümü bitirmez. Henüz yayınlanmadı.
+- [x] 9. bölüm "Sahte bitiş" deneyi telefonda kullanıcı tarafından onaylandı (2026-09-30).
+- [x] Sahte bitiş için sekiz oyun testi, 960x432 ve 1280x720 Türkçe çizim/yazı sınırı kontrolleri geçti. Paket içindeki 7, 8 ve 9. bölüm verileri doğrulandı. Kablosuz ADB yeniden bağlandı; APK ilerleme korunarak telefona kuruldu ve oyun açıldı (2026-09-30). Kullanıcı onayladı; Play'e yüklenmedi.
+- [x] 10. bölüme "Koşucunun intikamı" deneyi eklendi: ilk duvarı koşucu yerden söküp ekrana fırlatır. 1,5 saniyelik halkası bitmeden dokununca aynı duvar ücretsiz geri düşer; kaçırınca sadece o duvar kaybolur. Turda tek fırsat, sonraki duvarlar normal. Sekiz oyun testi ve 960x432 Türkçe piksel/yerleşim kontrolü geçti; henüz yayınlanmadı.
+- [x] 10. bölümün duvar düellosu telefonda kullanıcı tarafından onaylandı (2026-09-30).
+- [x] Duvar düellosu 960x432 ve 1280x720 Türkçe görünüm kontrollerini geçti. Gerçek APK'daki 7–10. bölüm verileri doğrulandı; telefon bağlantısı yenilenip ilerleme korunarak kuruldu ve oyun açıldı (2026-09-30). Kullanıcı onayladı; Play'e yüklenmedi.
+- [x] 11. bölüm "Son can, son numara" deneyi eklendi: hızlı koşucu son canda toparlanınca turda bir kez şemsiye açar. Testere can götürmeden şemsiyeyi kapatır; arkasındaki çukur inişi yakalayabilir. Duraklatma, tekrar ve bitiş durumları test edildi. İlk 10 bölümün ayarları değişmedi; 11. bölüm 10'u geçince açılır. Uçuş yüksekliği ve süre kuralı aşağıdaki kullanıcı geri bildirimiyle güncellendi.
+- [x] Şemsiye için sekiz oyun testi, 960x432 ve 1280x720 Türkçe şemsiye/11 bölümlü menü kontrolleri geçti. Gerçek APK'nın 7–11. bölüm verileri doğrulandı; telefon ilerleme korunarak güncellendi ve oyun açıldı (2026-09-30). Play'e yüklenmedi.
+- [ ] 11. bölümü telefonda dene: son canda şemsiye açıldığında testere ve hemen arkasına çukur yerleştir; görünürlüğü ve zamanlama zorluğunu değerlendir.
+- [x] Kullanıcı geri bildirimiyle şemsiye güncellendi: artık 84 piksel yüksekte duvarları da aşar, süreyle kapanmaz; oyun sırasında yalnızca testere kapatır. Kalkışta da normal hasar alamaz, kapandıktan sonra duvarlar tekrar etkili olur. Sadece 11. bölümün testeresi hem yer hem uçuş yüksekliğine ulaşacak şekilde yükseltildi; ilk 10 bölüm değişmedi. Sekiz oyun testi geçti (2026-09-30).
+- [x] Güncellenmiş şemsiye iki çözünürlükte piksel kontrollerinden geçti; yeni APK'da 7–11. bölüm verileri ve yükseltilmiş testerenin çizim/çarpışma yüksekliği doğrulandı. Telefon ilerleme korunarak güncellendi ve oyun açıldı; yeni kuralın telefon onayı bekleniyor. Play'e yüklenmedi (2026-09-30).
 - [x] 1.0.1 hazırlığı: yayın test kapısı çıkış kodu ve hata satırlarını da denetliyor; belirsiz yüklemede sürüm kodu korunuyor. 10 izole yayın testi geçti; Türkçe/İngilizce sürüm notları güncellendi.
 - [x] 1.0.1 / kod 3 imzalı deneme derlemesi tamamlandı; sekiz oyun testi geçti. Hazırlık commit'i `833816b` GitHub'a gönderildi. AAB imzası doğrulandı; 7. bölüm verisi doğrulanmış APK ile aynı. Yerel sürüm ayarı 1.0.0 / kod 2'ye geri alındı; Play'e yükleme yapılmadı.
 - [x] Kullanıcı onayıyla 1.0.1 / kod 3 kapalı teste yüklendi (2026-09-28). İlk deneme sürüm notlarının nesne biçimini reddetti; language/text listesine dönüştürülüp CLI dry-run kontrolünden sonra aynı kod 3 paketi başarıyla gönderildi. Play durumu incelemede; kod 2 hâlâ yayınlı. Sürüm etiketi: `v1.0.1-3`, sonraki kod 4.

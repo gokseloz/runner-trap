@@ -2,7 +2,7 @@ extends SceneTree
 ## TR/EN coverage and switching: godot --headless -s res://tests/translation_test.gd
 
 const CSV_PATH := "res://locale/translations.csv"
-const TRAP_SCENES := ["pit", "wall", "saw", "slippery", "spring", "snap", "magnet"]
+const TRAP_SCENES := ["pit", "wall", "saw", "slippery", "spring", "snap", "magnet", "fake_finish"]
 
 var _game_state: Node
 var _failures := 0
@@ -27,6 +27,10 @@ func _run() -> void:
 	names.append_array(["Spring master", "Win with at least %d spring combos", "Spring combos: %d/%d"])
 	names.append_array(["Magnet master", "Win with at least %d hits during a magnet pull", "Magnet hits: %d/%d"])
 	names.append_array(["Full arsenal", "Win using at least %d trap types", "Trap types: %d/%d"])
+	names.append_array(["Seesaw master", "Win with at least %d spring-to-seesaw launches", "Seesaw launches: %d/%d"])
+	names.append_array(["Quick hunter", "Win within the first %d%% of the track", "Track: %d%% / %d%%"])
+	names.append("Used")
+	names.append("Level 11")
 	for trap_name in TRAP_SCENES:
 		var trap: Trap = load("res://scenes/traps/%s.tscn" % trap_name).instantiate()
 		names.append(trap.display_name)
@@ -41,6 +45,8 @@ func _run() -> void:
 	_game_state.set_language("tr")
 	_check(tr("Retry") == "Tekrar", "tr: Retry -> %s" % tr("Retry"))
 	_check(tr("Lives: %d") % 2 == "Can: 2", "tr: lives format")
+	_check(tr("Track: %d%% / %d%%") % [25, 50] == "Parkur: %25 / %50", "tr: track percentage format")
+	_check(tr("Win within the first %d%% of the track") % 50 == "Parkurun ilk %50'lik kısmında kazan", "tr: quick hunter description format")
 	_check(_game_state.get_next_language() == "en", "tr: button offers English")
 	_game_state.set_language("en")
 	_check(tr("Retry") == "Retry", "en: Retry -> %s" % tr("Retry"))

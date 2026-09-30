@@ -7,6 +7,12 @@ const CARD_SIZE := Vector2(110, 110)
 var trap_scene: PackedScene
 ## Instance kept outside the tree, only used to read the trap's exported values.
 var trap_info: Trap
+var _cost_label: Label
+var exhausted := false:
+	set(value):
+		exhausted = value
+		if is_instance_valid(_cost_label):
+			_cost_label.text = tr("Used") if value else tr("Cost %d") % trap_info.energy_cost
 var affordable := true:
 	set(value):
 		affordable = value
@@ -37,7 +43,8 @@ func setup(scene: PackedScene) -> void:
 	box.add_child(icon)
 
 	box.add_child(_make_label(tr(trap_info.display_name), 18))
-	box.add_child(_make_label(tr("Cost %d") % trap_info.energy_cost, 16))
+	_cost_label = _make_label(tr("Cost %d") % trap_info.energy_cost, 16)
+	box.add_child(_cost_label)
 
 
 func _notification(what: int) -> void:

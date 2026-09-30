@@ -20,6 +20,7 @@ const GROUP := "traps"
 @export var card_color := Color.WHITE
 ## Disable the trap after it lands a hit.
 @export var one_shot := true
+@export var once_per_run := false
 
 var consumed := false
 

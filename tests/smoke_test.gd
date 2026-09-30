@@ -37,6 +37,7 @@ func _physics_process(_delta: float) -> bool:
 		60:
 			_check(_runner.is_on_floor(), "runner lands on ground")
 			_check(_runner.position.x > 150.0, "runner moves right (x=%.0f)" % _runner.position.x)
+			_test_fake_finish_state()
 			_test_placement()
 		220:
 			_check(_runner.lives == 3, "AI jumps over far pit (lives=%d)" % _runner.lives)
@@ -133,6 +134,20 @@ func _test_expressions() -> void:
 	visual.react(RunnerVisual.Mood.CONFIDENT, 0.8)
 	_check(visual.expression == RunnerVisual.Mood.NEUTRAL, "knocked out runner ignores expressions")
 	visual.free()
+
+
+func _test_fake_finish_state() -> void:
+	_check(_runner.celebrate_fake_finish(), "grounded runner celebrates fake finish")
+	_check(_runner._body.celebrating and not _runner.can_act(), "celebration raises arms and disables dodging")
+	_check(not _runner.jump() and not _runner.slide(), "celebrating runner cannot evade")
+	_check(not _runner.celebrate_fake_finish(), "celebration cannot restart")
+	_runner._update_fake_finish(Runner.FAKE_FINISH_CELEBRATION)
+	_check(not _runner._body.celebrating and _runner.can_act(), "runner can dodge again after celebration")
+	_check(_runner._fake_finish_boost_left == Runner.FAKE_FINISH_BOOST, "surviving fake finish starts speed boost")
+	_check(_runner._body.expression == RunnerVisual.Mood.ANGRY, "deceived runner becomes angry")
+	_runner._update_fake_finish(Runner.FAKE_FINISH_BOOST)
+	_check(_runner._fake_finish_boost_left == 0.0, "fake finish speed boost expires")
+	_runner._body._process(Runner.FAKE_FINISH_BOOST)
 
 
 func _resume_capture() -> void:

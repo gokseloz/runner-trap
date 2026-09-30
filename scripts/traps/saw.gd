@@ -30,3 +30,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not consumed:
 		_blade.rotation += SPIN_SPEED * delta
+
+
+func _on_runner_hit(runner: Runner) -> bool:
+	if runner.close_umbrella():
+		_consume()
+		return false
+	return super._on_runner_hit(runner)
